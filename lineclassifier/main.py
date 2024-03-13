@@ -35,24 +35,14 @@ def run(cfg):
     class CustomTrainer(Trainer):
         def compute_loss(self, model, inputs, return_outputs=False):
             labels = inputs.pop("labels")
-
-            # Perform a forward pass to get model outputs
             outputs = model(**inputs)
-            # Handle different output formats (dict or tuple)
-            logits = outputs.logits if isinstance(outputs, dict) else outputs[0]
 
-            # Ensure labels are the correct shape
+            logits = outputs.logits if isinstance(outputs, dict) else outputs[0]
             labels_flat = labels.view(-1)
 
-            # Initialize the loss function with ignore_index to skip the padded labels
-            # Adjust ignore_index according to your dataset, if necessary
             loss_fct = nn.CrossEntropyLoss()
-
-            # Reshape logits if necessary (depends on your model's output shape)
-            # Assuming logits are in shape [batch_size, num_labels]; if not, adjust accordingly
             logits_flat = logits.view(-1, self.model.config.num_labels)
 
-            # Compute the loss
             loss = loss_fct(logits_flat, labels_flat)
 
             # If return_outputs is True, return both loss and model outputs
@@ -73,7 +63,7 @@ def run(cfg):
         # Calculate precision, recall, and F1 score. `average='binary'` is for binary classification.
         # For multi-class classification, you might want to use `average='micro'`, `average='macro'`, or `average='weighted'`
         precision, recall, f1, _ = precision_recall_fscore_support(
-            labels, predictions, average="macro"
+            labels, predictions, average="binary"
         )
 
         # Return a dictionary with your metrics of interest
@@ -90,7 +80,7 @@ def run(cfg):
         per_device_train_batch_size=cfg.batch_size,
         per_device_eval_batch_size=cfg.batch_size,
         warmup_ratio=0.05,
-        weight_decay=0.05,
+        weight_decay=0.01,
         learning_rate=cfg.learning_rate,
         logging_dir="./logs",
         evaluation_strategy=cfg.eval_strategy,
