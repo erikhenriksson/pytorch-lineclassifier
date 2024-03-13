@@ -3,7 +3,6 @@ from torch import nn
 import torch
 
 from transformers import XLMRobertaConfig
-import numpy as np
 
 
 class CustomXLMRobertaConfig(XLMRobertaConfig):

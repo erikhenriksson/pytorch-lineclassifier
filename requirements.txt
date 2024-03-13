@@ -1,0 +1,6 @@
+jsonargparse
+datasets
+transformers
+torch
+sentencepiece
+accelerate
