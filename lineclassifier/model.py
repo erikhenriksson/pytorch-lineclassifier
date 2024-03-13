@@ -88,8 +88,8 @@ class XLMRobertaForLineClassification(XLMRobertaPreTrainedModel):
         start_token_mask = input_ids == start_token_id
         end_token_mask = input_ids == end_token_id
         line_start_mask = input_ids == self.sep_id
-        print(input_ids)
-        print(line_start_mask)
+        # print(input_ids)
+        # print(line_start_mask)
 
         line_features = torch.zeros(
             (batch_size, self.max_lines, hidden_size), device=sequence_output.device
