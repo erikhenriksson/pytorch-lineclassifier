@@ -29,7 +29,7 @@ def run(cfg):
             # Compute the loss
             loss = loss_fct(logits, labels_flat)
             print(loss)
-            return loss
+            return (loss, logits) if return_outputs else loss
 
     def preprocess_data(examples):
         # Concatenate lines with <s> token and process labels
