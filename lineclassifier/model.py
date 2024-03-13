@@ -107,6 +107,8 @@ class XLMRobertaForLineClassification(XLMRobertaPreTrainedModel):
                 line_repr = torch.mean(line_repr, dim=0, keepdim=True)
                 lines_pooled.append(line_repr)
 
+            print(start_idx, end_idx)
+
             # lines = sequence_output[i, line_indices, :]
             lines = torch.cat(lines_pooled, dim=0)
 
