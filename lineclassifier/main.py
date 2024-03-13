@@ -21,17 +21,17 @@ def run(cfg):
     class CustomTrainer(Trainer):
         def compute_loss(self, model, inputs, return_outputs=False):
             labels = inputs.pop("labels")
-            input_ids = inputs.get("input_ids")
 
             # Perform a forward pass to get model outputs
             logits = model(**inputs)
             labels_flat = labels.view(-1)
+
             # Initialize the loss function with ignore_index to skip the padded labels
             loss_fct = nn.CrossEntropyLoss(ignore_index=-100)
 
             # Compute the loss
             loss = loss_fct(logits, labels_flat)
-            print(loss)
+            print(f"loss: {loss.item()}")
             return (loss, logits) if return_outputs else loss
 
     def preprocess_data(examples):
@@ -94,9 +94,6 @@ def run(cfg):
             if num_labels > max_labels:
                 max_labels = num_labels
 
-            if num_labels > 400:
-                print(item)
-
     def custom_data_collator(features):
         batch = {}
 
@@ -139,31 +136,19 @@ def run(cfg):
             p.predictions[0] if isinstance(p.predictions, tuple) else p.predictions
         )
 
-        # Flatten true labels and predictions
         flattened_labels = labels.flatten()
-        flattened_predictions = predictions[
-            :, 1
-        ].flatten()  # Assuming predictions contain probabilities for the positive class
 
         # Find indices of non-padding labels
         valid_indices = np.where(flattened_labels != -100)[0]
 
-        # Filter out predictions corresponding to non-padding labels
-        filtered_predictions = flattened_predictions[valid_indices]
+        preds = predictions[:, 1].flatten()[valid_indices]
+        labels = flattened_labels[valid_indices]
 
         # Compute evaluation metrics
-        accuracy = accuracy_score(
-            flattened_labels[valid_indices], (filtered_predictions >= 0.5).astype(int)
-        )
-        precision = precision_score(
-            flattened_labels[valid_indices], (filtered_predictions >= 0.5).astype(int)
-        )
-        recall = recall_score(
-            flattened_labels[valid_indices], (filtered_predictions >= 0.5).astype(int)
-        )
-        f1 = f1_score(
-            flattened_labels[valid_indices], (filtered_predictions >= 0.5).astype(int)
-        )
+        accuracy = accuracy_score(labels, (preds >= 0.5).astype(int))
+        precision = precision_score(labels, (preds >= 0.5).astype(int))
+        recall = recall_score(labels, (preds >= 0.5).astype(int))
+        f1 = f1_score(labels, (preds >= 0.5).astype(int))
 
         return {
             "accuracy": accuracy,
@@ -174,14 +159,14 @@ def run(cfg):
 
     training_args = TrainingArguments(
         output_dir="./results",
-        num_train_epochs=5,
+        num_train_epochs=cfg.epochs,
         per_device_train_batch_size=cfg.b,
         per_device_eval_batch_size=cfg.b,
         warmup_ratio=0.05,
         weight_decay=0.01,
         learning_rate=cfg.lr,
         logging_dir="./logs",
-        evaluation_strategy="epoch",
+        evaluation_strategy="steps",
         save_strategy="epoch",
         logging_strategy="epoch",
         eval_steps=1,

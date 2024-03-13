@@ -15,6 +15,7 @@ if __name__ == "__main__":
     parser.add_argument("--lr", type=float, default=1e-5)
     parser.add_argument("--b", type=int, default=8)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--epochs", type=int, default=5)
 
     cfg = parser.parse_args()
 
