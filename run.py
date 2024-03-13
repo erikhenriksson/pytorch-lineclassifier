@@ -19,6 +19,7 @@ if __name__ == "__main__":
     parser.add_argument("--eval_strategy", default="epoch")
     parser.add_argument("--eval_steps", type=int, default=1)
     parser.add_argument("--context", type=int, default=2048)
+    parser.add_argument("--grad_acc_steps", type=int, default=1)
 
     cfg = parser.parse_args()
 
