@@ -131,7 +131,7 @@ def run(cfg):
     training_args = TrainingArguments(
         output_dir="./results",  # Output directory
         num_train_epochs=3,  # Total number of training epochs
-        per_device_train_batch_size=8,  # Batch size per device during training
+        per_device_train_batch_size=cfg.b,  # Batch size per device during training
         warmup_steps=100,  # Number of warmup steps for learning rate scheduler
         weight_decay=0.01,  # Strength of weight decay
         learning_rate=cfg.lr,

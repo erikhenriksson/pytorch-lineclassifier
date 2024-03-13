@@ -13,6 +13,7 @@ if __name__ == "__main__":
     parser.add_argument("--language", default="fi")
     parser.add_argument("--model", default="xlm-roberta-large")
     parser.add_argument("--lr", type=float, default=1e-5)
+    parser.add_argument("--b", type=int, default=8)
 
     cfg = parser.parse_args()
 
