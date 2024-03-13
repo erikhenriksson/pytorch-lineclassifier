@@ -132,12 +132,15 @@ def run(cfg):
 
     training_args = TrainingArguments(
         output_dir="./results",  # Output directory
-        num_train_epochs=3,  # Total number of training epochs
+        num_train_epochs=5,  # Total number of training epochs
         per_device_train_batch_size=cfg.b,  # Batch size per device during training
         warmup_ratio=0.05,
         weight_decay=0.01,  # Strength of weight decay
         learning_rate=cfg.lr,
         logging_dir="./logs",  # Directory for storing logs
+        evaluation_strategy="epoch",
+        save_strategy="epoch",
+        logging_strategy="epoch",
     )
 
     # Create a custom configuration with max_lines
