@@ -80,29 +80,28 @@ class XLMRobertaForLineClassification(XLMRobertaPreTrainedModel):
         sequence_output = outputs[0]
 
         batch_size, seq_length, hidden_size = sequence_output.size()
-        special_token_id = self.config.bos_token_id
 
-        special_token_mask = input_ids == special_token_id
+        start_token_id = self.config.bos_token_id
+        end_token_id = self.config.eos_token_id
+
+        start_token_mask = input_ids == start_token_id
+        end_token_mask = input_ids == start_token_id
 
         line_features = torch.zeros(
             (batch_size, self.max_lines, hidden_size), device=sequence_output.device
         )
 
         for i in range(batch_size):
-            line_indices = special_token_mask[i].nonzero(as_tuple=True)[0]
+            start_indices = start_token_mask[i].nonzero(as_tuple=True)[0]
+            end_indices = end_token_mask[i].nonzero(as_tuple=True)[0]
 
-            num_lines = line_indices.size(0)
+            num_lines = start_indices.size(0)
             lines_pooled = []
             print("example")
             for j in range(num_lines):  # Exclude the last </s> token
-                start_idx = line_indices[j].item() + 1  # Skip the <s> token
-                if j + 1 == len(line_indices):
-                    end_idx = seq_length - 1
+                start_idx = start_indices[j].item() + 1  # Skip the <s> token
+                end_idx = end_indices[j].item() + 1  # Skip the <s> token
 
-                else:
-
-                    end_idx = line_indices[j + 1].item()
-                print(start_idx, end_idx)
                 line_repr = sequence_output[i, start_idx:end_idx, :]
 
                 line_repr = torch.mean(line_repr, dim=0, keepdim=True)
