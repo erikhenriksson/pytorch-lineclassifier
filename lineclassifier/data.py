@@ -16,7 +16,7 @@ def transform_data(data, context):
 
     for i in range(len(texts)):
         transformed_example = {
-            "texts": texts[i],
+            "text": texts[i],
             "label": int(labels[i]),
         }
         if context:
