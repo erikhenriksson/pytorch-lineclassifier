@@ -78,6 +78,7 @@ class XLMRobertaForLineClassification(XLMRobertaPreTrainedModel):
             return_dict=return_dict,
         )
         sequence_output = outputs[0]
+        print(sequence_output)
         batch_size, seq_length, hidden_size = sequence_output.size()
         special_token_id = self.config.bos_token_id
 
@@ -104,8 +105,6 @@ class XLMRobertaForLineClassification(XLMRobertaPreTrainedModel):
 
             lines_orig = sequence_output[i, line_indices, :]
             lines = torch.cat(lines_pooled, dim=0)
-
-            print(lines)
 
             if num_lines < self.max_lines:
                 padding = torch.zeros(
