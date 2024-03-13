@@ -166,7 +166,7 @@ def run(cfg):
         weight_decay=0.01,
         learning_rate=cfg.lr,
         logging_dir="./logs",
-        evaluation_strategy="steps",
+        evaluation_strategy=cfg.eval_strategy,
         save_strategy="epoch",
         logging_strategy="epoch",
         eval_steps=1,

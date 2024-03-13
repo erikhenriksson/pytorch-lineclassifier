@@ -44,7 +44,7 @@ class XLMRobertaForLineClassification(XLMRobertaPreTrainedModel):
         self.pooling = config.pooling
         self.roberta = XLMRobertaModel(config, add_pooling_layer=False)
         self.classifier = LineClassificationHead(config)
-
+        print(f"Pooling model: {self.pooling}")
         # Initialize weights and apply final processing
         self.post_init()
 
