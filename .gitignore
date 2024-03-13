@@ -1,0 +1,13 @@
+venv
+.env
+.test
+.hf
+__pycache*
+*.jsonl
+output*
+tmp
+logs
+log
+wandb
+checkpoints
+tokens_cache

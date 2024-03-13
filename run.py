@@ -1,0 +1,22 @@
+import os
+
+from jsonargparse import ArgumentParser
+
+os.environ["HF_HOME"] = ".hf/hf_home"
+os.environ["XDG_CACHE_HOME"] = ".hf/xdg_cache_home"
+os.environ["HF_DATASETS_CACHE"] = ".hf/datasets_cache"
+
+
+if __name__ == "__main__":
+    parser = ArgumentParser()
+
+    parser.add_argument("--language", default="fi")
+    parser.add_argument("--model", default="xlm-roberta-large")
+
+    cfg = parser.parse_args()
+
+    print(parser.dump(cfg))
+
+    from lineclassifier import main
+
+    main.run(cfg)
