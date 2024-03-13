@@ -12,10 +12,7 @@ class CustomXLMRobertaConfig(XLMRobertaConfig):
         self.pooling = pooling
 
 
-# Copied from transformers.models.roberta.modeling_roberta.RobertaClassificationHead with Roberta->XLMRoberta
 class LineClassificationHead(nn.Module):
-    """Head for sentence-level classification tasks."""
-
     def __init__(self, config):
         super().__init__()
         self.dense = nn.Linear(config.hidden_size, config.hidden_size)
@@ -29,7 +26,7 @@ class LineClassificationHead(nn.Module):
         self.out_proj = nn.Linear(config.hidden_size, config.num_labels)
 
     def forward(self, features, **kwargs):
-        x = features  # These are the <s> tokens for all lines
+        x = features
         x = self.dropout(x)
         x = self.dense(x)
         x = torch.tanh(x)
@@ -44,6 +41,7 @@ class XLMRobertaForLineClassification(XLMRobertaPreTrainedModel):
         self.num_labels = config.num_labels
         self.config = config
         self.max_lines = config.max_lines
+        self.pooling = config.pooling
         self.roberta = XLMRobertaModel(config, add_pooling_layer=False)
         self.classifier = LineClassificationHead(config)
 
