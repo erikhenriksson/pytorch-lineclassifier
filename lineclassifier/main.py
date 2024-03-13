@@ -145,13 +145,13 @@ def run(cfg):
         labels = flattened_labels[valid_indices]
 
         probs = 1 / (1 + np.exp(-preds))
+        binary_preds = (probs >= 0.5).astype(int)
 
         # Compute evaluation metrics
-        accuracy = accuracy_score(labels, (probs >= 0.5).astype(int))
-        precision = precision_score(labels, (probs >= 0.5).astype(int))
-        recall = recall_score(labels, (probs >= 0.5).astype(int))
-        f1 = f1_score(labels, (probs >= 0.5).astype(int))
-
+        accuracy = accuracy_score(labels, binary_preds)
+        precision = precision_score(labels, binary_preds)
+        recall = recall_score(labels, binary_preds)
+        f1 = f1_score(labels, binary_preds)
         return {
             "accuracy": accuracy,
             "precision": precision,
