@@ -11,7 +11,7 @@ if __name__ == "__main__":
     parser = ArgumentParser()
 
     parser.add_argument("--language", "-l", default="fi")
-    parser.add_argument("--model", "-m", default="xlm-roberta-large")
+    parser.add_argument("--model", "-m", default="BAAI/bge-m3-retromae")
     parser.add_argument("--learning_rate", "-lr", type=float, default=1e-5)
     parser.add_argument("--batch_size", "-b", type=int, default=8)
     parser.add_argument("--seed", "-s", type=int, default=42)

@@ -13,7 +13,7 @@ from torch.nn.utils.rnn import pad_sequence
 from transformers import (
     Trainer,
     TrainingArguments,
-    XLMRobertaTokenizer,
+    AutoTokenizer,
     AutoModelForSequenceClassification,
 )
 
@@ -27,7 +27,7 @@ count_separated_sequences = lambda l, n: len(
 
 def run(cfg):
 
-    tokenizer = XLMRobertaTokenizer.from_pretrained(cfg.model)
+    tokenizer = AutoTokenizer.from_pretrained(cfg.model)
 
     dataset = get_dataset(cfg)
 
@@ -81,7 +81,7 @@ def run(cfg):
     if cfg.context:
 
         config = CustomXLMRobertaConfig.from_pretrained(
-            "BAAI/bge-m3-retromae",
+            cfg.model,
             num_labels=2,
             sep_id=5360,
         )
@@ -89,7 +89,7 @@ def run(cfg):
         model = XLMRobertaForLineClassification(config)
     else:
         model = AutoModelForSequenceClassification.from_pretrained(
-            "xlm-roberta-large", num_labels=2
+            cfg.model, num_labels=2
         )
 
     trainer = Trainer(
