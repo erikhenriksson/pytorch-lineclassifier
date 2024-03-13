@@ -103,8 +103,8 @@ class XLMRobertaForLineClassification(XLMRobertaPreTrainedModel):
                 line_repr = torch.mean(line_repr, dim=0, keepdim=True)
                 lines_pooled.append(line_repr)
 
-            lines_orig = sequence_output[i, line_indices, :]
-            lines = torch.cat(lines_pooled, dim=0)
+            lines = sequence_output[i, line_indices, :]
+            # lines = torch.cat(lines_pooled, dim=0)
 
             if num_lines < self.max_lines:
                 padding = torch.zeros(
