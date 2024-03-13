@@ -9,7 +9,7 @@ import json
 from datasets import Dataset, DatasetDict, concatenate_datasets
 
 
-def transform_data(data):
+def transform_data(data, context):
     transformed_examples = []
     texts = data["text"]
     labels = data["labels"]
@@ -18,39 +18,35 @@ def transform_data(data):
         transformed_example = {
             "text": texts[i],
             "label": int(labels[i]),
-            "left_context": " \n ".join(texts[:i]),
-            "right_context": " \n ".join(texts[i + 1 :]),
         }
+        if context:
+            transformed_example["left_context"] = " \n ".join(texts[:i])
+            transformed_example["right_context"] = (" \n ".join(texts[i + 1 :]),)
         transformed_examples.append(transformed_example)
 
     return transformed_examples
 
 
-def gen(language, split):
+def gen(language, split, context):
     with open(f"data/{language}/{split}.json", "r", encoding="utf-8") as file:
         data = json.load(file)
-    transformed_data = [example for item in data for example in transform_data(item)]
+    transformed_data = [
+        example for item in data for example in transform_data(item, context)
+    ]
     for item in transformed_data:
         yield item
 
 
 def get_dataset(cfg):
+    generate = lambda split: Dataset.from_generator(
+        gen,
+        cache_dir="./tokens_cache",
+        gen_kwargs={"language": cfg.language, "split": split, "context": cfg.context},
+    )
     splits = {}
-    splits["train"] = Dataset.from_generator(
-        gen,
-        cache_dir="./tokens_cache",
-        gen_kwargs={"language": cfg.language, "split": "train"},
-    )
-    splits["dev"] = Dataset.from_generator(
-        gen,
-        cache_dir="./tokens_cache",
-        gen_kwargs={"language": cfg.language, "split": "test"},
-    )
-    splits["test"] = Dataset.from_generator(
-        gen,
-        cache_dir="./tokens_cache",
-        gen_kwargs={"language": cfg.language, "split": "dev"},
-    )
+    splits["train"] = generate("train")
+    splits["dev"] = generate("dev")
+    splits["test"] = generate("test")
 
     return DatasetDict(splits)
 
@@ -68,12 +64,15 @@ def preprocess_dataset(dataset, tokenizer, cfg):
 
         # Tokenize the concatenated texts
         tokenized_inputs = tokenizer(
-            concatenated_texts,
+            concatenated_texts if cfg.context else examples["text"],
             padding="max_length",
             truncation=True,
             max_length=512,
             return_tensors="pt",
         )
+
+        if not cfg.context:
+            return tokenized_inputs
 
         ignore = []
 
@@ -92,8 +91,13 @@ def preprocess_dataset(dataset, tokenizer, cfg):
 
     tokenized_dataset = dataset.map(
         process,
-        remove_columns=["text", "left_context", "right_context"],
+        remove_columns=(
+            ["text", "left_context", "right_context"] if cfg.context else ["text"]
+        ),
         batched=True,
     )
-    filtered_dataset = tokenized_dataset.filter(lambda example: not example["ignore"])
-    return filtered_dataset
+    if cfg.context:
+        tokenized_dataset = tokenized_dataset.filter(
+            lambda example: not example["ignore"]
+        )
+    return tokenized_dataset

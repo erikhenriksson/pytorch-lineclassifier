@@ -10,7 +10,12 @@ from sklearn.metrics import (
 )
 from torch import nn
 from torch.nn.utils.rnn import pad_sequence
-from transformers import Trainer, TrainingArguments, XLMRobertaTokenizer
+from transformers import (
+    Trainer,
+    TrainingArguments,
+    XLMRobertaTokenizer,
+    AutoModelForSequenceClassification,
+)
 
 from .data import get_dataset, preprocess_dataset
 from .model import CustomXLMRobertaConfig, XLMRobertaForLineClassification
@@ -31,22 +36,6 @@ def run(cfg):
     dataset = preprocess_dataset(dataset, tokenizer, cfg)
 
     print(dataset["train"][0])
-
-    class CustomTrainer(Trainer):
-        def compute_loss(self, model, inputs, return_outputs=False):
-            labels = inputs.pop("labels")
-            outputs = model(**inputs)
-
-            logits = outputs.logits if isinstance(outputs, dict) else outputs[0]
-            labels_flat = labels.view(-1)
-
-            loss_fct = nn.CrossEntropyLoss()
-            logits_flat = logits.view(-1, self.model.config.num_labels)
-
-            loss = loss_fct(logits_flat, labels_flat)
-
-            # If return_outputs is True, return both loss and model outputs
-            return (loss, outputs) if return_outputs else loss
 
     def compute_metrics(p):
         labels = p.label_ids
@@ -89,15 +78,19 @@ def run(cfg):
         eval_steps=cfg.eval_steps,
     )
 
-    config = CustomXLMRobertaConfig.from_pretrained(
-        "xlm-roberta-large",
-        num_labels=2,
-        sep_id=5360,
-    )
+    if cfg.context:
 
-    model = XLMRobertaForLineClassification(config)
+        config = CustomXLMRobertaConfig.from_pretrained(
+            "xlm-roberta-large",
+            num_labels=2,
+            sep_id=5360,
+        )
 
-    trainer = CustomTrainer(
+        model = XLMRobertaForLineClassification(config)
+    else:
+        model = AutoModelForSequenceClassification("xlm-roberta-large", num_labels=2)
+
+    trainer = Trainer(
         model=model,
         args=training_args,
         train_dataset=dataset["train"],
