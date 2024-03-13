@@ -134,7 +134,7 @@ def run(cfg):
         per_device_train_batch_size=8,  # Batch size per device during training
         warmup_steps=100,  # Number of warmup steps for learning rate scheduler
         weight_decay=0.01,  # Strength of weight decay
-        learning_rate=1e-7,
+        learning_rate=cfg.lr,
         logging_dir="./logs",  # Directory for storing logs
     )
 
