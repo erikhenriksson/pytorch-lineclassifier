@@ -83,10 +83,6 @@ class XLMRobertaForLineClassification(XLMRobertaPreTrainedModel):
 
         batch_size, seq_length, hidden_size = sequence_output.size()
 
-        focus_mask = input_ids == self.sep_id
-
-        # Assuming SEP tokens enclose the text of interest, find the indexes of SEP tokens
-        focus_indices = focus_mask.nonzero(as_tuple=True)
         pooled_output = torch.zeros(
             batch_size,
             hidden_size,
@@ -95,16 +91,14 @@ class XLMRobertaForLineClassification(XLMRobertaPreTrainedModel):
         )
 
         for i in range(batch_size):
-            # Extract the sequence between the two SEP tokens for each example
-            seq_focus_indices = focus_indices[1][focus_indices[0] == i]
-            if (
-                len(seq_focus_indices) > 1
-            ):  # Ensure there are at least two SEP tokens to define a range
-                start_idx = seq_focus_indices[0] + 1
-                end_idx = seq_focus_indices[1]
-                focused_seq = sequence_output[i, start_idx:end_idx, :]
-                # Mean pooling over the focused sequence
-                pooled_output[i] = focused_seq.mean(dim=0)
+            # Find the indices of SEP tokens for the current sequence
+            sep_indices = (input_ids[i] == self.sep_id).nonzero(as_tuple=True)[0]
+            if sep_indices.size(0) >= 2:  # Ensure there are at least two SEP tokens
+                # Extract the segment between the first two SEP tokens
+                start_idx, end_idx = sep_indices[0].item() + 1, sep_indices[1].item()
+                target_segment = sequence_output[i, start_idx:end_idx]
+                # Apply mean pooling over the target segment
+                pooled_output[i] = target_segment.mean(dim=0)
 
         logits = self.classifier(pooled_output)
 
