@@ -16,6 +16,7 @@ if __name__ == "__main__":
     parser.add_argument("--b", type=int, default=8)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--epochs", type=int, default=5)
+    parser.add_argument("--pool", type=bool, default=True)
 
     cfg = parser.parse_args()
 

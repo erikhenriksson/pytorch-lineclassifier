@@ -6,9 +6,10 @@ from transformers import XLMRobertaConfig
 
 
 class CustomXLMRobertaConfig(XLMRobertaConfig):
-    def __init__(self, max_lines=100, **kwargs):
+    def __init__(self, max_lines=100, pooling=False, **kwargs):
         super().__init__(**kwargs)
         self.max_lines = max_lines
+        self.pooling = pooling
 
 
 # Copied from transformers.models.roberta.modeling_roberta.RobertaClassificationHead with Roberta->XLMRoberta
@@ -96,19 +97,21 @@ class XLMRobertaForLineClassification(XLMRobertaPreTrainedModel):
             end_indices = end_token_mask[i].nonzero(as_tuple=True)[0]
 
             num_lines = start_indices.size(0)
-            lines_pooled = []
 
-            for j in range(num_lines):  # Exclude the last </s> token
-                start_idx = start_indices[j].item() + 1  # Skip the <s> token
-                end_idx = end_indices[j].item() + 1  # Skip the <s> token
+            if not self.pooling:
+                lines = sequence_output[i, start_indices, :]
+            else:
+                lines = []
+                for j in range(num_lines):  # Exclude the last </s> token
+                    start_idx = start_indices[j].item() + 1  # Skip the <s> token
+                    end_idx = end_indices[j].item() + 1  # Skip the <s> token
 
-                line_repr = sequence_output[i, start_idx:end_idx, :]
+                    line_repr = sequence_output[i, start_idx:end_idx, :]
 
-                line_repr = torch.mean(line_repr, dim=0, keepdim=True)
-                lines_pooled.append(line_repr)
+                    line_repr = torch.mean(line_repr, dim=0, keepdim=True)
+                    lines.append(line_repr)
 
-            # lines = sequence_output[i, line_indices, :]
-            lines = torch.cat(lines_pooled, dim=0)
+                lines = torch.cat(lines, dim=0)
 
             if num_lines < self.max_lines:
                 padding = torch.zeros(

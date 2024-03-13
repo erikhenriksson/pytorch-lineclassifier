@@ -174,7 +174,7 @@ def run(cfg):
 
     # Create a custom configuration with max_lines
     config = CustomXLMRobertaConfig.from_pretrained(
-        "xlm-roberta-large", num_labels=2, max_lines=max_labels
+        "xlm-roberta-large", num_labels=2, max_lines=max_labels, pooling=cfg.pool
     )
 
     model = XLMRobertaForLineClassification(config)
