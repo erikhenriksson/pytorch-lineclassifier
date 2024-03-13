@@ -132,7 +132,7 @@ def run(cfg):
         output_dir="./results",  # Output directory
         num_train_epochs=3,  # Total number of training epochs
         per_device_train_batch_size=cfg.b,  # Batch size per device during training
-        warmup_steps=100,  # Number of warmup steps for learning rate scheduler
+        warmup_ratio=0.05,
         weight_decay=0.01,  # Strength of weight decay
         learning_rate=cfg.lr,
         logging_dir="./logs",  # Directory for storing logs
