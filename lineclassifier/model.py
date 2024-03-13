@@ -105,8 +105,7 @@ class XLMRobertaForLineClassification(XLMRobertaPreTrainedModel):
             lines_orig = sequence_output[i, line_indices, :]
             lines = torch.cat(lines_pooled, dim=0)
 
-            # print(lines_orig.shape)
-            # print(lines.shape)
+            print(lines)
 
             if num_lines < self.max_lines:
                 padding = torch.zeros(
@@ -115,8 +114,6 @@ class XLMRobertaForLineClassification(XLMRobertaPreTrainedModel):
                 )
                 lines = torch.cat((lines, padding), dim=0)
             line_features[i] = lines
-
-        print(line_features)
 
         logits = self.classifier(
             line_features.view(-1, hidden_size)
