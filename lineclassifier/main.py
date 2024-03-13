@@ -81,6 +81,8 @@ def run(cfg):
 
     max_labels = 0
 
+    tokenized_dataset = tokenized_dataset.shuffle(seed=cfg.seed)
+
     # Assuming 'dataset' is your dataset object and it's iterable
     for ds in tokenized_dataset.values():
         for item in ds:

@@ -78,7 +78,7 @@ class XLMRobertaForLineClassification(XLMRobertaPreTrainedModel):
             return_dict=return_dict,
         )
         sequence_output = outputs[0]
-        print(sequence_output)
+
         batch_size, seq_length, hidden_size = sequence_output.size()
         special_token_id = self.config.bos_token_id
 
