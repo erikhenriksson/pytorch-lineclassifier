@@ -81,14 +81,16 @@ def run(cfg):
     if cfg.context:
 
         config = CustomXLMRobertaConfig.from_pretrained(
-            "xlm-roberta-large",
+            "BAAI/bge-m3-retromae",
             num_labels=2,
             sep_id=5360,
         )
 
         model = XLMRobertaForLineClassification(config)
     else:
-        model = AutoModelForSequenceClassification("xlm-roberta-large", num_labels=2)
+        model = AutoModelForSequenceClassification.from_pretrained(
+            "xlm-roberta-large", num_labels=2
+        )
 
     trainer = Trainer(
         model=model,

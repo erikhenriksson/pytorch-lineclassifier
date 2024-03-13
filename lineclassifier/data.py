@@ -56,19 +56,25 @@ def preprocess_dataset(dataset, tokenizer, cfg):
 
     def process(examples):
 
-        concatenated_texts = [
-            f"{a.replace('§', '')} \n § {b.replace('§', '')} § \n {c.replace('§', '')}"
-            for a, b, c in zip(
-                examples["left_context"], examples["text"], examples["right_context"]
-            )
-        ]
+        concatenated_texts = (
+            [
+                f"{a.replace('§', '')} \n § {b.replace('§', '')} § \n {c.replace('§', '')}"
+                for a, b, c in zip(
+                    examples["left_context"],
+                    examples["text"],
+                    examples["right_context"],
+                )
+            ]
+            if cfg.context
+            else examples["text"]
+        )
 
         # Tokenize the concatenated texts
         tokenized_inputs = tokenizer(
-            concatenated_texts if cfg.context else examples["text"],
+            concatenated_texts,
             padding="max_length",
             truncation=True,
-            max_length=512,
+            max_length=512 if not cfg.context else cfg.context,
             return_tensors="pt",
         )
 
