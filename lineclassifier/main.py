@@ -194,7 +194,7 @@ def run(cfg):
         learning_rate=cfg.lr,
         logging_dir="./logs",
         evaluation_strategy=cfg.eval_strategy,
-        save_strategy="epoch",
+        save_strategy="no",
         logging_strategy="epoch",
         eval_steps=1,
     )
