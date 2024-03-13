@@ -165,6 +165,7 @@ def run(cfg):
 
         # Find indices of non-padding labels
         valid_indices = np.where(flattened_labels != -100)[0]
+        valid_indices = valid_indices[valid_indices < predictions.shape[0]]
 
         preds = predictions[:, 1].flatten()[valid_indices]
         labels = flattened_labels[valid_indices]
