@@ -6,10 +6,11 @@ from transformers import XLMRobertaConfig
 
 
 class CustomXLMRobertaConfig(XLMRobertaConfig):
-    def __init__(self, max_lines=100, pooling=False, **kwargs):
+    def __init__(self, max_lines=100, sep_id=0, pooling=False, **kwargs):
         super().__init__(**kwargs)
         self.max_lines = max_lines
         self.pooling = pooling
+        self.sep_id = sep_id
 
 
 class LineClassificationHead(nn.Module):
@@ -42,6 +43,7 @@ class XLMRobertaForLineClassification(XLMRobertaPreTrainedModel):
         self.config = config
         self.max_lines = config.max_lines
         self.pooling = config.pooling
+        self.sep_id = config.sep_id
         self.roberta = XLMRobertaModel(config, add_pooling_layer=False)
         self.classifier = LineClassificationHead(config)
         print(f"Pooling model: {self.pooling}")
@@ -85,6 +87,9 @@ class XLMRobertaForLineClassification(XLMRobertaPreTrainedModel):
 
         start_token_mask = input_ids == start_token_id
         end_token_mask = input_ids == end_token_id
+        line_start_mask = input_ids == self.sep_id
+        print(input_ids)
+        print(line_start_mask)
 
         line_features = torch.zeros(
             (batch_size, self.max_lines, hidden_size), device=sequence_output.device
@@ -93,17 +98,20 @@ class XLMRobertaForLineClassification(XLMRobertaPreTrainedModel):
         for i in range(batch_size):
             start_indices = start_token_mask[i].nonzero(as_tuple=True)[0]
             end_indices = end_token_mask[i].nonzero(as_tuple=True)[0]
-
-            num_lines = start_indices.size(0)
+            sep_indices = line_start_mask[i].nonzero(as_tuple=True)[0]
 
             if not self.pooling:
+                num_lines = start_indices.size(0)
                 lines = sequence_output[i, start_indices, :]
             else:
+                num_lines = sep_indices.size(0) - 1
                 lines = []
-                for j in range(num_lines):
-                    start_idx = start_indices[j].item()
-                    end_idx = end_indices[j].item()
 
+                for j in range(sep_indices.size(0) - 1):
+                    # start_idx = start_indices[j].item()
+                    # end_idx = end_indices[j].item()
+                    start_idx = sep_indices[j].item()
+                    end_idx = sep_indices[j + 1].item()
                     line_repr = sequence_output[i, start_idx : end_idx + 1, :]
 
                     line_repr = torch.mean(line_repr, dim=0, keepdim=True)

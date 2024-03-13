@@ -14,6 +14,11 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 import numpy as np
 
 
+count_separated_sequences = lambda l, n: len(
+    [xa for xa in "-".join([str(x) for x in l]).split(str(n)) if xa]
+)
+
+
 def run(cfg):
 
     tokenizer = XLMRobertaTokenizer.from_pretrained(cfg.model)
@@ -36,7 +41,10 @@ def run(cfg):
 
     def preprocess_data(examples):
         # Concatenate lines with <s> token and process labels
-        concatenated_texts = [" </s> <s> ".join(text) for text in examples["text"]]
+        concatenated_texts = [
+            " § " + (" § ".join([x.replace("§", "") for x in text])) + " § "
+            for text in examples["text"]
+        ]
         labels = [[int(y) for y in x] for x in examples["labels"]]
 
         # Tokenize the concatenated texts
@@ -47,6 +55,23 @@ def run(cfg):
             max_length=512,
             return_tensors="pt",
         )
+
+        sep_id = 5360
+
+        # Adjust labels to match tokenized and potentially truncated texts
+        adjusted_labels = []
+        for i, (input_ids, label) in enumerate(
+            zip(tokenized_inputs["input_ids"], labels)
+        ):
+            input_ids = [int(x) for x in input_ids if x not in [0, 1, 2]]
+
+            sep_sequences = count_separated_sequences(input_ids, sep_id)
+
+            adjusted_labels.append(label[:sep_sequences])
+
+        tokenized_inputs["labels"] = adjusted_labels
+
+        return tokenized_inputs
 
         # Adjust labels to match tokenized and potentially truncated texts
         adjusted_labels = []
@@ -174,9 +199,15 @@ def run(cfg):
         eval_steps=1,
     )
 
+    sep_id = tokenizer.convert_tokens_to_ids("§")
+    print(sep_id)
     # Create a custom configuration with max_lines
     config = CustomXLMRobertaConfig.from_pretrained(
-        "xlm-roberta-large", num_labels=2, max_lines=max_labels, pooling=cfg.pool
+        "xlm-roberta-large",
+        num_labels=2,
+        max_lines=max_labels,
+        pooling=cfg.pool,
+        sep_id=5360,
     )
 
     model = XLMRobertaForLineClassification(config)
