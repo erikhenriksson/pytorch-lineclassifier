@@ -100,11 +100,11 @@ class XLMRobertaForLineClassification(XLMRobertaPreTrainedModel):
                 lines = sequence_output[i, start_indices, :]
             else:
                 lines = []
-                for j in range(num_lines):  # Exclude the last </s> token
-                    start_idx = start_indices[j].item() + 1  # Skip the <s> token
-                    end_idx = end_indices[j].item() + 1  # Skip the <s> token
+                for j in range(num_lines):
+                    start_idx = start_indices[j].item()
+                    end_idx = end_indices[j].item()
 
-                    line_repr = sequence_output[i, start_idx:end_idx, :]
+                    line_repr = sequence_output[i, start_idx + 1 : end_idx, :]
 
                     line_repr = torch.mean(line_repr, dim=0, keepdim=True)
                     lines.append(line_repr)
