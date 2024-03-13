@@ -46,7 +46,7 @@ def run(cfg):
 
             # Initialize the loss function with ignore_index to skip the padded labels
             # Adjust ignore_index according to your dataset, if necessary
-            loss_fct = nn.CrossEntropyLoss(ignore_index=-1)
+            loss_fct = nn.CrossEntropyLoss()
 
             # Reshape logits if necessary (depends on your model's output shape)
             # Assuming logits are in shape [batch_size, num_labels]; if not, adjust accordingly
@@ -96,7 +96,7 @@ def run(cfg):
         evaluation_strategy=cfg.eval_strategy,
         save_strategy="no",
         logging_strategy="epoch",
-        eval_steps=1,
+        eval_steps=cfg.eval_steps,
     )
 
     config = CustomXLMRobertaConfig.from_pretrained(

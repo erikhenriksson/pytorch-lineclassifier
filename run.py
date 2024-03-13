@@ -17,6 +17,7 @@ if __name__ == "__main__":
     parser.add_argument("--seed", "-s", type=int, default=42)
     parser.add_argument("--epochs", "-e", type=int, default=5)
     parser.add_argument("--eval_strategy", default="epoch")
+    parser.add_argument("--eval_steps", type=int, default=1)
 
     cfg = parser.parse_args()
 
