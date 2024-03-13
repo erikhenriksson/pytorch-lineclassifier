@@ -16,14 +16,13 @@ def transform_data(data, context):
 
     for i in range(len(texts)):
         transformed_example = {
-            "text": texts[i],
+            "texts": texts[i],
             "label": int(labels[i]),
         }
         if context:
             transformed_example["left_context"] = " \n ".join(texts[:i])
             transformed_example["right_context"] = " \n ".join(texts[i + 1 :])
-        print(transformed_example)
-        exit()
+
         transformed_examples.append(transformed_example)
 
     return transformed_examples
