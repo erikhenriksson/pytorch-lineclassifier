@@ -3,12 +3,7 @@ from torch import nn
 import torch
 from torch.nn import BCEWithLogitsLoss, CrossEntropyLoss, MSELoss
 from transformers import XLMRobertaConfig
-
-
-class DotDict(dict):
-    def __getattr__(self, key):
-        if key in self:
-            return self[key]
+from transformers.modeling_outputs import SequenceClassifierOutput
 
 
 class CustomXLMRobertaConfig(XLMRobertaConfig):
@@ -129,10 +124,11 @@ class XLMRobertaForLineClassification(XLMRobertaPreTrainedModel):
                 loss = loss_fct(logits, labels)
 
         if not return_dict:
+
             output = (logits,) + outputs[2:]
             return ((loss,) + output) if loss is not None else output
 
-        return DotDict(
+        return SequenceClassifierOutput(
             loss=loss,
             logits=logits,
             hidden_states=outputs.hidden_states,
