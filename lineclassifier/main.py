@@ -1,18 +1,19 @@
-from transformers import (
-    XLMRobertaTokenizer,
-    Trainer,
-    TrainingArguments,
-)
-import torch
-from torch import nn
-from datasets import load_dataset
-
-from torch.nn.utils.rnn import pad_sequence
-from .model import XLMRobertaForLineClassification, CustomXLMRobertaConfig
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
-
 import numpy as np
+import torch
+from datasets import load_dataset
+from sklearn.metrics import (
+    accuracy_score,
+    f1_score,
+    precision_recall_fscore_support,
+    precision_score,
+    recall_score,
+)
+from torch import nn
+from torch.nn.utils.rnn import pad_sequence
+from transformers import Trainer, TrainingArguments, XLMRobertaTokenizer
+
 from .data import get_dataset, preprocess_dataset
+from .model import CustomXLMRobertaConfig, XLMRobertaForLineClassification
 
 count_separated_sequences = lambda l, n: len(
     [xa for xa in "-".join([str(x) for x in l]).split(str(n)) if xa]
@@ -48,22 +49,24 @@ def run(cfg):
             return (loss, logits) if return_outputs else loss
 
     def compute_metrics(p):
-        _, labels = p
+        labels = p.label_ids
         predictions = (
             p.predictions[0] if isinstance(p.predictions, tuple) else p.predictions
         )
 
-        labels = labels.flatten()
-        preds = predictions[:, 1].flatten()
+        # Apply softmax to the predictions to convert logits to probabilities
+        predictions = np.argmax(predictions, axis=-1)
 
-        probs = 1 / (1 + np.exp(-preds))
-        binary_preds = (probs >= 0.5).astype(int)
+        # Calculate accuracy
+        accuracy = accuracy_score(labels, predictions)
 
-        # Compute evaluation metrics
-        accuracy = accuracy_score(labels, binary_preds)
-        precision = precision_score(labels, binary_preds)
-        recall = recall_score(labels, binary_preds)
-        f1 = f1_score(labels, binary_preds)
+        # Calculate precision, recall, and F1 score. `average='binary'` is for binary classification.
+        # For multi-class classification, you might want to use `average='micro'`, `average='macro'`, or `average='weighted'`
+        precision, recall, f1, _ = precision_recall_fscore_support(
+            labels, predictions, average="macro"
+        )
+
+        # Return a dictionary with your metrics of interest
         return {
             "accuracy": accuracy,
             "precision": precision,
