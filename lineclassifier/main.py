@@ -36,7 +36,7 @@ def run(cfg):
 
             # Compute the loss
             loss = loss_fct(logits, labels_flat)
-            print(f"loss: {loss.item()}")
+            # f"loss: {loss.item()}")
             return (loss, logits) if return_outputs else loss
 
     def preprocess_data(examples):
@@ -200,7 +200,7 @@ def run(cfg):
     )
 
     sep_id = tokenizer.convert_tokens_to_ids("§")
-    print(sep_id)
+    # print(sep_id)
     # Create a custom configuration with max_lines
     config = CustomXLMRobertaConfig.from_pretrained(
         "xlm-roberta-large",
@@ -223,3 +223,7 @@ def run(cfg):
 
     # Train the model
     trainer.train()
+
+    test_results = trainer.evaluate(tokenized_dataset["test"])
+
+    print(test_results)
