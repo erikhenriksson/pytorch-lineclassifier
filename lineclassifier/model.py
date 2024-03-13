@@ -116,10 +116,10 @@ class XLMRobertaForLineClassification(XLMRobertaPreTrainedModel):
                 lines = torch.cat((lines, padding), dim=0)
             line_features[i] = lines
 
+        print(line_features)
+
         logits = self.classifier(
             line_features.view(-1, hidden_size)
         )  # Reshape for classification head
-
-        print(logits)
 
         return logits
