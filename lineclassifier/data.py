@@ -88,7 +88,7 @@ def preprocess_dataset(dataset, tokenizer, cfg):
 
         return tokenized_inputs
 
-    # dataset = dataset.shuffle(seed=cfg.seed)
+    dataset = dataset.shuffle(seed=cfg.seed)
 
     tokenized_dataset = dataset.map(
         process,
