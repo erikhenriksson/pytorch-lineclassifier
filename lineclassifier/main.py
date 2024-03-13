@@ -191,7 +191,7 @@ def run(cfg):
         per_device_train_batch_size=cfg.b,
         per_device_eval_batch_size=cfg.b,
         warmup_ratio=0.05,
-        weight_decay=0.01,
+        weight_decay=0.05,
         learning_rate=cfg.lr,
         logging_dir="./logs",
         evaluation_strategy=cfg.eval_strategy,
