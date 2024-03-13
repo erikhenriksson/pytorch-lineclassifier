@@ -10,13 +10,12 @@ os.environ["HF_DATASETS_CACHE"] = ".hf/datasets_cache"
 if __name__ == "__main__":
     parser = ArgumentParser()
 
-    parser.add_argument("--language", default="fi")
-    parser.add_argument("--model", default="xlm-roberta-large")
-    parser.add_argument("--lr", type=float, default=1e-5)
-    parser.add_argument("--b", type=int, default=8)
-    parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--epochs", type=int, default=5)
-    parser.add_argument("--pool", type=bool, default=True)
+    parser.add_argument("--language", "-l", default="fi")
+    parser.add_argument("--model", "-m", default="xlm-roberta-large")
+    parser.add_argument("--learning_rate", "-lr", type=float, default=1e-5)
+    parser.add_argument("--batch_size", "-b", type=int, default=8)
+    parser.add_argument("--seed", "-s", type=int, default=42)
+    parser.add_argument("--epochs", "-e", type=int, default=5)
     parser.add_argument("--eval_strategy", default="epoch")
 
     cfg = parser.parse_args()

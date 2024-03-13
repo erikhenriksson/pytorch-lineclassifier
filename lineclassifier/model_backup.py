@@ -6,8 +6,10 @@ from transformers import XLMRobertaConfig
 
 
 class CustomXLMRobertaConfig(XLMRobertaConfig):
-    def __init__(self, sep_id=0, **kwargs):
+    def __init__(self, max_lines=100, sep_id=0, pooling=False, **kwargs):
         super().__init__(**kwargs)
+        self.max_lines = max_lines
+        self.pooling = pooling
         self.sep_id = sep_id
 
 
@@ -39,10 +41,13 @@ class XLMRobertaForLineClassification(XLMRobertaPreTrainedModel):
         super().__init__(config)
         self.num_labels = config.num_labels
         self.config = config
+        self.max_lines = config.max_lines
+        self.pooling = config.pooling
         self.sep_id = config.sep_id
         self.roberta = XLMRobertaModel(config, add_pooling_layer=False)
         self.classifier = LineClassificationHead(config)
-
+        print(f"Pooling model: {self.pooling}")
+        # Initialize weights and apply final processing
         self.post_init()
 
     def forward(
@@ -77,29 +82,53 @@ class XLMRobertaForLineClassification(XLMRobertaPreTrainedModel):
 
         batch_size, seq_length, hidden_size = sequence_output.size()
 
-        focus_mask = input_ids == self.sep_id
+        start_token_id = self.config.bos_token_id
+        end_token_id = self.config.eos_token_id
 
-        # Assuming SEP tokens enclose the text of interest, find the indexes of SEP tokens
-        focus_indices = focus_mask.nonzero(as_tuple=True)
-        pooled_output = torch.zeros(
-            batch_size,
-            hidden_size,
-            dtype=sequence_output.dtype,
-            device=sequence_output.device,
+        start_token_mask = input_ids == start_token_id
+        end_token_mask = input_ids == end_token_id
+        line_start_mask = input_ids == self.sep_id
+        # print(input_ids)
+        # print(line_start_mask)
+
+        line_features = torch.zeros(
+            (batch_size, self.max_lines, hidden_size), device=sequence_output.device
         )
 
         for i in range(batch_size):
-            # Extract the sequence between the two SEP tokens for each example
-            seq_focus_indices = focus_indices[1][focus_indices[0] == i]
-            if (
-                len(seq_focus_indices) > 1
-            ):  # Ensure there are at least two SEP tokens to define a range
-                start_idx = seq_focus_indices[0] + 1
-                end_idx = seq_focus_indices[1]
-                focused_seq = sequence_output[i, start_idx:end_idx, :]
-                # Mean pooling over the focused sequence
-                pooled_output[i] = focused_seq.mean(dim=0)
+            start_indices = start_token_mask[i].nonzero(as_tuple=True)[0]
+            end_indices = end_token_mask[i].nonzero(as_tuple=True)[0]
+            sep_indices = line_start_mask[i].nonzero(as_tuple=True)[0]
 
-        logits = self.classifier(pooled_output)
+            if not self.pooling:
+                num_lines = start_indices.size(0)
+                lines = sequence_output[i, start_indices, :]
+            else:
+                num_lines = sep_indices.size(0) - 1
+                lines = []
+
+                for j in range(sep_indices.size(0) - 1):
+                    # start_idx = start_indices[j].item()
+                    # end_idx = end_indices[j].item()
+                    start_idx = sep_indices[j].item()
+                    end_idx = sep_indices[j + 1].item()
+                    line_repr = sequence_output[i, start_idx + 1 : end_idx, :]
+
+                    line_repr = torch.mean(line_repr, dim=0, keepdim=True)
+                    lines.append(line_repr)
+
+                lines = torch.cat(lines, dim=0)
+
+            if num_lines < self.max_lines:
+                padding = torch.zeros(
+                    (self.max_lines - num_lines, hidden_size),
+                    device=sequence_output.device,
+                )
+                lines = torch.cat((lines, padding), dim=0)
+            line_features[i] = lines
+
+        logits = self.classifier(
+            line_features.view(-1, hidden_size)
+        )  # Reshape for classification head
 
         return logits
