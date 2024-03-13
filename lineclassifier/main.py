@@ -9,6 +9,9 @@ from datasets import load_dataset
 
 from torch.nn.utils.rnn import pad_sequence
 from .model import XLMRobertaForLineClassification, CustomXLMRobertaConfig
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+
+import numpy as np
 
 
 def run(cfg):
@@ -130,17 +133,58 @@ def run(cfg):
         batch["labels"] = torch.stack(labels_padded, dim=0)
         return batch
 
+    def compute_metrics(p):
+        _, labels = p
+        predictions = (
+            p.predictions[0] if isinstance(p.predictions, tuple) else p.predictions
+        )
+
+        # Flatten true labels and predictions
+        flattened_labels = labels.flatten()
+        flattened_predictions = predictions[
+            :, 1
+        ].flatten()  # Assuming predictions contain probabilities for the positive class
+
+        # Find indices of non-padding labels
+        valid_indices = np.where(flattened_labels != -100)[0]
+
+        # Filter out predictions corresponding to non-padding labels
+        filtered_predictions = flattened_predictions[valid_indices]
+
+        # Compute evaluation metrics
+        accuracy = accuracy_score(
+            flattened_labels[valid_indices], (filtered_predictions >= 0.5).astype(int)
+        )
+        precision = precision_score(
+            flattened_labels[valid_indices], (filtered_predictions >= 0.5).astype(int)
+        )
+        recall = recall_score(
+            flattened_labels[valid_indices], (filtered_predictions >= 0.5).astype(int)
+        )
+        f1 = f1_score(
+            flattened_labels[valid_indices], (filtered_predictions >= 0.5).astype(int)
+        )
+
+        return {
+            "accuracy": accuracy,
+            "precision": precision,
+            "recall": recall,
+            "f1": f1,
+        }
+
     training_args = TrainingArguments(
-        output_dir="./results",  # Output directory
-        num_train_epochs=5,  # Total number of training epochs
-        per_device_train_batch_size=cfg.b,  # Batch size per device during training
+        output_dir="./results",
+        num_train_epochs=5,
+        per_device_train_batch_size=cfg.b,
+        per_device_eval_batch_size=cfg.b,
         warmup_ratio=0.05,
-        weight_decay=0.01,  # Strength of weight decay
+        weight_decay=0.01,
         learning_rate=cfg.lr,
-        logging_dir="./logs",  # Directory for storing logs
+        logging_dir="./logs",
         evaluation_strategy="epoch",
         save_strategy="epoch",
         logging_strategy="epoch",
+        eval_steps=1,
     )
 
     # Create a custom configuration with max_lines
@@ -156,6 +200,7 @@ def run(cfg):
         train_dataset=tokenized_dataset["train"],
         eval_dataset=tokenized_dataset["validation"],
         data_collator=custom_data_collator,
+        compute_metrics=compute_metrics,
     )
 
     # Train the model
