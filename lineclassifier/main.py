@@ -37,16 +37,26 @@ def run(cfg):
             labels = inputs.pop("labels")
 
             # Perform a forward pass to get model outputs
-            logits = model(**inputs)
+            outputs = model(**inputs)
+            # Handle different output formats (dict or tuple)
+            logits = outputs.logits if isinstance(outputs, dict) else outputs[0]
+
+            # Ensure labels are the correct shape
             labels_flat = labels.view(-1)
 
             # Initialize the loss function with ignore_index to skip the padded labels
-            loss_fct = nn.CrossEntropyLoss()
+            # Adjust ignore_index according to your dataset, if necessary
+            loss_fct = nn.CrossEntropyLoss(ignore_index=-1)
+
+            # Reshape logits if necessary (depends on your model's output shape)
+            # Assuming logits are in shape [batch_size, num_labels]; if not, adjust accordingly
+            logits_flat = logits.view(-1, self.model.config.num_labels)
 
             # Compute the loss
-            loss = loss_fct(logits, labels_flat)
-            # f"loss: {loss.item()}")
-            return (loss, logits) if return_outputs else loss
+            loss = loss_fct(logits_flat, labels_flat)
+
+            # If return_outputs is True, return both loss and model outputs
+            return (loss, outputs) if return_outputs else loss
 
     def compute_metrics(p):
         labels = p.label_ids

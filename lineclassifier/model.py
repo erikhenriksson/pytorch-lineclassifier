@@ -5,6 +5,12 @@ import torch
 from transformers import XLMRobertaConfig
 
 
+class DotDict(dict):
+    def __getattr__(self, key):
+        if key in self:
+            return self[key]
+
+
 class CustomXLMRobertaConfig(XLMRobertaConfig):
     def __init__(self, sep_id=0, **kwargs):
         super().__init__(**kwargs)
@@ -102,4 +108,4 @@ class XLMRobertaForLineClassification(XLMRobertaPreTrainedModel):
 
         logits = self.classifier(pooled_output)
 
-        return logits
+        return DotDict({"logits": logits})
