@@ -68,11 +68,16 @@ def get_dataset(cfg):
 
 def preprocess_dataset(dataset, tokenizer, cfg):
 
+    def concatenate(left, target, right):
+        left = (left + " \n") if left else left
+        right = ("\n " + right) if right else right
+        return f"{left} § {target} § {right}"
+
     def process(examples):
 
         concatenated_texts = (
             [
-                f"{a.replace('§', '')} \n § {b.replace('§', '')} § \n {c.replace('§', '')}"
+                concatenate(a, b, c)
                 for a, b, c in zip(
                     examples["left_context"],
                     examples["text"],
