@@ -21,6 +21,7 @@ if __name__ == "__main__":
     parser.add_argument("--context", type=int, default=2048)
     parser.add_argument("--grad_acc_steps", type=int, default=1)
     parser.add_argument("--patience", type=int, default=5)
+    parser.add_argument("--best_model_metric", default="eval_f1")
 
     cfg = parser.parse_args()
 

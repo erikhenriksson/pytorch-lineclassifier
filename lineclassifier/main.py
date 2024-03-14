@@ -78,6 +78,7 @@ def run(cfg):
         logging_strategy="epoch",
         eval_steps=cfg.eval_steps,
         gradient_accumulation_steps=cfg.grad_acc_steps,
+        metric_for_best_model=cfg.best_model_metric,
     )
 
     if cfg.context:
