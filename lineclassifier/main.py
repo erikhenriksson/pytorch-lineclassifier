@@ -74,12 +74,13 @@ def run(cfg):
         learning_rate=cfg.learning_rate,
         logging_dir="./logs",
         evaluation_strategy=cfg.eval_strategy,
-        save_strategy="no",
+        save_strategy="epoch",
         logging_strategy="epoch",
-        eval_steps=cfg.eval_steps,
+        eval_steps="epoch",
         gradient_accumulation_steps=cfg.grad_acc_steps,
         metric_for_best_model=cfg.best_model_metric,
         load_best_model_at_end=True,
+        save_total_limit=2,
     )
 
     if cfg.context:
