@@ -107,4 +107,5 @@ def run(cfg):
     )
 
     trainer.train()
+    print("Evaluating on test set...")
     print(trainer.evaluate(dataset["test"]))
