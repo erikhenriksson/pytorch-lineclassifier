@@ -9,7 +9,7 @@ import json
 from datasets import Dataset, DatasetDict, concatenate_datasets
 
 
-def transform_data(data, window):
+def transform_data(data, context, window):
     transformed_examples = []
     texts = data["text"]
     labels = data["labels"]
@@ -21,15 +21,17 @@ def transform_data(data, window):
             "label": int(labels[i]),
         }
 
-        # Calculate the indices for left and right contexts
-        left_context_start = max(0, i - window)
-        right_context_end = min(len(texts), i + window + 1)
+        if context:
 
-        # Include the left and right contexts if requested
-        transformed_example["left_context"] = " \n ".join(texts[left_context_start:i])
-        transformed_example["right_context"] = " \n ".join(
-            texts[i + 1 : right_context_end]
-        )
+            # Calculate the indices for left and right contexts
+            left_context_start = max(0, i - window)
+            right_context_end = min(len(texts), i + window + 1)
+
+            # Include the left and right contexts if requested
+            transformed_example["left_context"] = " \n ".join(texts[left_context_start:i])
+            transformed_example["right_context"] = " \n ".join(
+                texts[i + 1 : right_context_end]
+            )
 
         # Append the transformed example to the results list
         transformed_examples.append(transformed_example)
