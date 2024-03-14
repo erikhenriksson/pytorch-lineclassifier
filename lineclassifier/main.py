@@ -15,6 +15,7 @@ from transformers import (
     TrainingArguments,
     AutoTokenizer,
     AutoModelForSequenceClassification,
+    EarlyStoppingCallback,
 )
 
 from .data import get_dataset, preprocess_dataset
@@ -99,6 +100,7 @@ def run(cfg):
         train_dataset=dataset["train"],
         eval_dataset=dataset["dev"],
         compute_metrics=compute_metrics,
+        callbacks=[EarlyStoppingCallback(early_stopping_patience=cfg.patience)],
     )
 
     trainer.train()
