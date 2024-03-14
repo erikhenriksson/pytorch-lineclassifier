@@ -9,30 +9,39 @@ import json
 from datasets import Dataset, DatasetDict, concatenate_datasets
 
 
-def transform_data(data, context):
+def transform_data(data, window):
     transformed_examples = []
     texts = data["text"]
     labels = data["labels"]
 
     for i in range(len(texts)):
+        # Define the transformed example with basic text and label
         transformed_example = {
             "text": texts[i],
             "label": int(labels[i]),
         }
-        if context:
-            transformed_example["left_context"] = " \n ".join(texts[:i])
-            transformed_example["right_context"] = " \n ".join(texts[i + 1 :])
 
+        # Calculate the indices for left and right contexts
+        left_context_start = max(0, i - window)
+        right_context_end = min(len(texts), i + window + 1)
+
+        # Include the left and right contexts if requested
+        transformed_example["left_context"] = " \n ".join(texts[left_context_start:i])
+        transformed_example["right_context"] = " \n ".join(
+            texts[i + 1 : right_context_end]
+        )
+
+        # Append the transformed example to the results list
         transformed_examples.append(transformed_example)
 
     return transformed_examples
 
 
-def gen(language, split, context):
+def gen(language, split, context, window):
     with open(f"data/{language}/{split}.json", "r", encoding="utf-8") as file:
         data = json.load(file)
     transformed_data = [
-        example for item in data for example in transform_data(item, context)
+        example for item in data for example in transform_data(item, context, window)
     ]
     for item in transformed_data:
         yield item
@@ -42,7 +51,12 @@ def get_dataset(cfg):
     generate = lambda split: Dataset.from_generator(
         gen,
         cache_dir="./tokens_cache",
-        gen_kwargs={"language": cfg.language, "split": split, "context": cfg.context},
+        gen_kwargs={
+            "language": cfg.language,
+            "split": split,
+            "context": cfg.context,
+            "window": cfg.window,
+        },
     )
     splits = {}
     splits["train"] = generate("train")
