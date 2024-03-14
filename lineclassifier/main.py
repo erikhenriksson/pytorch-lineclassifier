@@ -76,7 +76,7 @@ def run(cfg):
         evaluation_strategy=cfg.eval_strategy,
         save_strategy="epoch",
         logging_strategy="epoch",
-        eval_steps="epoch",
+        eval_steps=cfg.eval_steps,
         gradient_accumulation_steps=cfg.grad_acc_steps,
         metric_for_best_model=cfg.best_model_metric,
         load_best_model_at_end=True,
