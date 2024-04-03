@@ -24,6 +24,7 @@ def run(cfg):
                 documents[split].append(item)
 
     def extract_cls_embeddings_and_labels(doc, tokenizer, model):
+        print(doc)
         cls_embeddings = []  # To store [CLS] embeddings of each line
         labels = []  # To store labels for each line
 
