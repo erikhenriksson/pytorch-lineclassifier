@@ -29,6 +29,7 @@ def run(cfg):
 
         # Process each line and collect labels
         for line, label in zip(doc["text"], doc["labels"]):
+            print(line)
             # Tokenize the line, adding special tokens
             inputs = tokenizer(
                 line,
@@ -38,6 +39,7 @@ def run(cfg):
                 padding="max_length",
                 add_special_tokens=True,
             )
+            print(inputs)
             outputs = model(**inputs)
 
             # Extract the [CLS] token's embedding
