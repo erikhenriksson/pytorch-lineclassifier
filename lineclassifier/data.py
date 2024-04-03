@@ -28,7 +28,9 @@ def transform_data(data, context, window):
             right_context_end = min(len(texts), i + window + 1)
 
             # Include the left and right contexts if requested
-            transformed_example["left_context"] = " \n ".join(texts[left_context_start:i])
+            transformed_example["left_context"] = " \n ".join(
+                texts[left_context_start:i]
+            )
             transformed_example["right_context"] = " \n ".join(
                 texts[i + 1 : right_context_end]
             )
@@ -39,14 +41,17 @@ def transform_data(data, context, window):
     return transformed_examples
 
 
-def gen(language, split, context, window):
-    with open(f"data/{language}/{split}.json", "r", encoding="utf-8") as file:
-        data = json.load(file)
-    transformed_data = [
-        example for item in data for example in transform_data(item, context, window)
-    ]
-    for item in transformed_data:
-        yield item
+def gen(languages, split, context, window):
+    for language in languages.split("-"):
+        with open(f"data/{language}/{split}.json", "r", encoding="utf-8") as file:
+            data = json.load(file)
+        transformed_data = [
+            example
+            for item in data
+            for example in transform_data(item, context, window)
+        ]
+        for item in transformed_data:
+            yield item
 
 
 def get_dataset(cfg):
@@ -54,7 +59,7 @@ def get_dataset(cfg):
         gen,
         cache_dir="./tokens_cache",
         gen_kwargs={
-            "language": cfg.language,
+            "language": cfg.languages,
             "split": split,
             "context": cfg.context,
             "window": cfg.window,
