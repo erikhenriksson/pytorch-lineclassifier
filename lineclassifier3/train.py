@@ -59,7 +59,7 @@ def run(cfg):
 
     # Example: Extract embeddings for the first document
     doc_matrix, labels = extract_cls_embeddings_and_labels(
-        documents["train"][1], tokenizer, model
+        documents["train"][2], tokenizer, model
     )
     print(doc_matrix.shape)  # Should be [seq_length, 1024] for xlm-roberta-large
     print(doc_matrix)
