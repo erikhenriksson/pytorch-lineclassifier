@@ -47,8 +47,6 @@ def run(cfg):
             # Collect label
             labels.append(int(label))
 
-        print("d")
-
         # Stack [CLS] embeddings to form the document matrix [seq_length, embedding_dim]
         doc_matrix = torch.stack(cls_embeddings).squeeze(
             1
@@ -61,7 +59,7 @@ def run(cfg):
 
     # Example: Extract embeddings for the first document
     doc_matrix, labels = extract_cls_embeddings_and_labels(
-        documents["train"][0], tokenizer, model
+        documents["train"][1], tokenizer, model
     )
     print(doc_matrix.shape)  # Should be [seq_length, 1024] for xlm-roberta-large
     print(doc_matrix)
