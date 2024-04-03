@@ -29,7 +29,6 @@ def run(cfg):
 
         # Process each line and collect labels
         for line, label in zip(doc["text"], doc["labels"]):
-            print(line)
             # Tokenize the line, adding special tokens
             inputs = tokenizer(
                 line,
@@ -39,16 +38,16 @@ def run(cfg):
                 padding="max_length",
                 add_special_tokens=True,
             )
-            print(inputs)
             outputs = model(**inputs)
 
             # Extract the [CLS] token's embedding
             cls_embedding = outputs.last_hidden_state[:, 0, :]
-            print(cls_embedding)
             cls_embeddings.append(cls_embedding)
 
             # Collect label
             labels.append(int(label))
+
+        print("d")
 
         # Stack [CLS] embeddings to form the document matrix [seq_length, embedding_dim]
         doc_matrix = torch.stack(cls_embeddings).squeeze(
