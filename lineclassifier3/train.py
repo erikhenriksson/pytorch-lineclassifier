@@ -42,6 +42,7 @@ def run(cfg):
 
             # Extract the [CLS] token's embedding
             cls_embedding = outputs.last_hidden_state[:, 0, :]
+            print(cls_embedding)
             cls_embeddings.append(cls_embedding)
 
             # Collect label
@@ -152,7 +153,7 @@ def run(cfg):
             loss = criterion(output.squeeze(), batch_labels.to(device))
 
             # Backward pass: Compute gradients
-            loss.backward()
+            loss.backward(retain_graph=True)
             # Parameters update: Apply gradients
             optimizer.step()
 
