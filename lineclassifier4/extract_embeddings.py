@@ -10,27 +10,18 @@ from tqdm import tqdm
 
 
 def lines_to_embeddings(document, tokenizer, model, device):
-    """
-    Convert lines in a document to embeddings.
 
-    Args:
-    - document: A dictionary with a "text" key holding a list of lines.
-    - tokenizer: An instance of XLMRobertaTokenizer.
-    - model: An instance of XLMRobertaModel.
-    - device: The torch device to run the model on.
-
-    Returns:
-    - A list of 1024-dimensional embeddings, one for each line in the document.
-    """
     # Batch the lines for efficiency
 
-    embeddings = []  # To store the final embeddings
-    batch_size = 32
+    all_data = []  # To store the final embeddings and labels
     all_lines = document["text"]
+    all_labels = document["labels"]
+    batch_size = 128
 
     # Process in batches
     for i in range(0, len(all_lines), batch_size):
         batch_lines = all_lines[i : i + batch_size]
+        batch_labels = all_labels[i : i + batch_size]
         with torch.no_grad():
             inputs = tokenizer(
                 batch_lines,
@@ -48,9 +39,11 @@ def lines_to_embeddings(document, tokenizer, model, device):
             cls_embeddings = (
                 cls_embeddings.cpu().numpy()
             )  # Move embeddings to CPU and convert to numpy for easier handling
-            embeddings.extend(cls_embeddings)
 
-    return embeddings
+            batch_data = list(zip(cls_embeddings, batch_labels))
+            all_data.extend(batch_data)
+
+    return all_data
 
 
 def run(cfg):
@@ -80,9 +73,9 @@ def run(cfg):
             # Replace the text in the document with its embeddings
             documents[split][i]["text"] = embeddings
 
-    # Assuming 'documents' is your dictionary containing the embeddings
-    pickle_file = "documents_embeddings.pkl"
+    pickle_file = "documents_embeddings_with_labels.pkl"
 
-    # Saving the embeddings to a file
     with open(pickle_file, "wb") as f:
         pickle.dump(documents, f)
+
+    print(f"Embeddings and labels saved to {pickle_file}")
