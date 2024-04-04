@@ -115,6 +115,7 @@ def run(cfg):
         cfg.model_name
     ).to(device)
     finetuned_classification_head = tuned_model.classifier
+    finetuned_classification_head = None
 
     # Prepare DataLoader for training, dev, and test sets
     train_dataset = TensorDataset(
