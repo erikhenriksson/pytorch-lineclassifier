@@ -1,7 +1,11 @@
 import torch
 import pickle
 import json
-from transformers import XLMRobertaForSequenceClassification, XLMRobertaTokenizer
+from transformers import (
+    XLMRobertaForSequenceClassification,
+    XLMRobertaModel,
+    XLMRobertaTokenizer,
+)
 from tqdm import tqdm
 
 
@@ -49,9 +53,7 @@ def run(cfg):
 
     # Load model and tokenizer
     tokenizer = XLMRobertaTokenizer.from_pretrained("xlm-roberta-large")
-    model = XLMRobertaForSequenceClassification.from_pretrained(cfg.model_name).to(
-        device
-    )
+    model = XLMRobertaModel.from_pretrained(cfg.model_name).to(device)
 
     # Load documents
     documents = {"train": [], "dev": [], "test": []}
