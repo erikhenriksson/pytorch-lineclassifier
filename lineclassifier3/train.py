@@ -109,17 +109,17 @@ def run(cfg):
 
     # Prepare DataLoader for training, dev, and test sets
     train_dataset = TensorDataset(
-        torch.FloatTensor(train_embeddings), torch.FloatTensor(train_labels)
+        torch.FloatTensor(train_embeddings.cpu()), torch.FloatTensor(train_labels.cpu())
     )
     train_loader = DataLoader(train_dataset, batch_size=2, shuffle=True)
 
     dev_dataset = TensorDataset(
-        torch.FloatTensor(dev_embeddings), torch.FloatTensor(dev_labels)
+        torch.FloatTensor(dev_embeddings.cpu()), torch.FloatTensor(dev_labels.cpu())
     )
     dev_loader = DataLoader(dev_dataset, batch_size=2, shuffle=False)
 
     test_dataset = TensorDataset(
-        torch.FloatTensor(test_embeddings)
+        torch.FloatTensor(test_embeddings.cpu())
     )  # No labels for test
     test_loader = DataLoader(test_dataset, batch_size=2, shuffle=False)
 
