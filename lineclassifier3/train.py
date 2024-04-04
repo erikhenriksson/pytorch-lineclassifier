@@ -124,7 +124,7 @@ def run(cfg):
     test_loader = DataLoader(test_dataset, batch_size=8, shuffle=False)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = DocumentClassifier(embedding_dim=1024, nhead=4, nhid=2048, nlayers=1).to(
+    model = DocumentClassifier(embedding_dim=1024, nhead=4, nhid=2048, nlayers=6).to(
         device
     )
 
