@@ -139,7 +139,7 @@ def run(cfg):
     initial_lr = 1e-9
     target_lr = 1e-7
     warmup_steps = 50
-    num_epochs = 20
+    num_epochs = 50
 
     for epoch in range(num_epochs):
         model.train()
