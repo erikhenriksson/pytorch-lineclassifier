@@ -1,6 +1,7 @@
 import json
 
 from transformers import XLMRobertaModel, XLMRobertaTokenizer
+from transformers import XLMRobertaForSequenceClassification
 import torch
 import torch.nn as nn
 from torch.optim.lr_scheduler import StepLR
@@ -110,7 +111,9 @@ def run(cfg):
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    model = XLMRobertaModel.from_pretrained(cfg.model_name).to(device)
+    model = XLMRobertaForSequenceClassification.from_pretrained(cfg.model_name).to(
+        device
+    )
     finetuned_classification_head = model.classifier
 
     # Prepare DataLoader for training, dev, and test sets
