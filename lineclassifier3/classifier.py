@@ -19,3 +19,19 @@ class DocumentClassifier(nn.Module):
         encoded_src = self.transformer_encoder(src, src_key_padding_mask=src_mask)
         output = self.decoder(encoded_src)
         return output
+
+
+class SimpleRNNClassifier(nn.Module):
+    def __init__(self, embedding_dim, hidden_dim, num_layers=1):
+        super(SimpleRNNClassifier, self).__init__()
+        self.lstm = nn.LSTM(
+            embedding_dim, hidden_dim, num_layers=num_layers, batch_first=True
+        )
+        self.classifier = nn.Linear(hidden_dim, 1)
+
+    def forward(self, embeddings):
+        # embeddings shape: (batch_size, seq_len, embedding_dim)
+        lstm_out, _ = self.lstm(embeddings)
+        logits = self.classifier(lstm_out)
+        # Return logits directly without applying sigmoid here; shape: (batch_size, seq_len, 1)
+        return logits

@@ -8,7 +8,7 @@ from torch.optim.lr_scheduler import StepLR
 
 from sklearn.metrics import accuracy_score, f1_score
 
-from .classifier import DocumentClassifier
+from .classifier import DocumentClassifier, SimpleRNNClassifier
 
 from tqdm import tqdm
 import pickle
@@ -45,7 +45,8 @@ def evaluate(model, data_loader, device):
             )  # (seq_len, batch_size, feature)
             src_mask = (batch_embeddings.sum(dim=-1) == 0).transpose(0, 1)
 
-            output = model(batch_embeddings, src_mask=src_mask)
+            # output = model(batch_embeddings, src_mask=src_mask)
+            output = model(batch_embeddings)
             output = output.view(-1)  # Flatten output
 
             labels_flat = batch_labels.view(-1)
@@ -124,8 +125,23 @@ def run(cfg):
     test_loader = DataLoader(test_dataset, batch_size=8, shuffle=False)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = DocumentClassifier(embedding_dim=1024, nhead=4, nhid=2048, nlayers=6).to(
-        device
+    # model = DocumentClassifier(embedding_dim=1024, nhead=4, nhid=2048, nlayers=6).to(
+    #    device
+    # )
+
+    # Example of initializing the SimpleRNNClassifier
+    embedding_dim = 1024  # The size of each line embedding
+    hidden_dim = 512  # Hidden dimension size in LSTM
+    num_layers = 2  # Number of LSTM layers
+    num_classes = (
+        1  # For binary classification, use 1; for multi-class, change accordingly
+    )
+
+    model = SimpleRNNClassifier(
+        embedding_dim=embedding_dim,
+        hidden_dim=hidden_dim,
+        num_layers=num_layers,
+        num_classes=num_classes,
     )
 
     criterion = nn.BCEWithLogitsLoss(reduction="none")
@@ -168,7 +184,8 @@ def run(cfg):
 
             # Assuming the padding in batch_embeddings is represented by all-zero vectors
             src_mask = (batch_embeddings.sum(dim=-1) == 0).transpose(0, 1)
-            output = model(batch_embeddings, src_mask=src_mask)
+            # output = model(batch_embeddings, src_mask=src_mask)
+            output = model(batch_embeddings)
             output = output.view(-1)
 
             labels_flat = batch_labels.view(-1)
