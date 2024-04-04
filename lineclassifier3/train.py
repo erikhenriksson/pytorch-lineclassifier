@@ -136,10 +136,10 @@ def run(cfg):
     scheduler = StepLR(optimizer, step_size=30, gamma=0.1)
 
     # Placeholder variables for demonstration
-    initial_lr = 1e-7
-    target_lr = 1e-5
-    warmup_steps = 100
-    num_epochs = 15
+    initial_lr = 1e-8
+    target_lr = 1e-6
+    warmup_steps = 50
+    num_epochs = 20
 
     for epoch in range(num_epochs):
         model.train()
