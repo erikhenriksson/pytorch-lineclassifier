@@ -136,8 +136,8 @@ def run(cfg):
     scheduler = StepLR(optimizer, step_size=30, gamma=0.1)
 
     # Placeholder variables for demonstration
-    initial_lr = 1e-8
-    target_lr = 1e-6
+    initial_lr = 1e-9
+    target_lr = 1e-7
     warmup_steps = 50
     num_epochs = 20
 
