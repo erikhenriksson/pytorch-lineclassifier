@@ -105,7 +105,7 @@ def run(cfg):
 
         return padded_embeddings, padded_labels
 
-    for split in cfg.splits:
+    for split in cfg.splits.split("-"):
         documents_to_process = documents[split]
         if cfg.sample:
             documents_to_process = documents_to_process[: cfg.sample]
