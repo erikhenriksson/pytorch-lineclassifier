@@ -1,6 +1,6 @@
 import json
 
-from transformers import XLMRobertaModel, XLMRobertaTokenizer
+from transformers import XLMRobertaForSequenceClassification, XLMRobertaTokenizer
 import torch
 import torch.nn as nn
 
@@ -17,7 +17,9 @@ def run(cfg):
 
     # Load model and tokenizer
     tokenizer = XLMRobertaTokenizer.from_pretrained("xlm-roberta-large")
-    model = XLMRobertaModel.from_pretrained(cfg.model_name).to(device)
+    model = XLMRobertaForSequenceClassification.from_pretrained(cfg.model_name).to(
+        device
+    )
 
     # Load documents
     documents = {"train": [], "dev": [], "test": []}
@@ -70,6 +72,7 @@ def run(cfg):
     def pad_tensors(tensors, pad_token=0, is_embedding=True):
         """Pad a list of tensors to the same length with pad_token. Adjusts for 1D and 2D tensors."""
         max_length = max(t.size(0) for t in tensors)
+        print(max_length)
         padded_tensors = []
         for t in tensors:
             if is_embedding:  # For 2D tensors (embeddings)
