@@ -24,25 +24,31 @@ def lines_to_embeddings(document, tokenizer, model, device):
     """
     # Batch the lines for efficiency
 
-    embeddings = []
-    with torch.no_grad():  # No need to compute gradients
-        for line in document["text"]:
+    embeddings = []  # To store the final embeddings
+    batch_size = 32
+    all_lines = document["text"]
+
+    # Process in batches
+    for i in range(0, len(all_lines), batch_size):
+        batch_lines = all_lines[i : i + batch_size]
+        with torch.no_grad():
             inputs = tokenizer(
-                line,
+                batch_lines,
                 return_tensors="pt",
-                max_length=512,
+                padding=True,
                 truncation=True,
-                padding="max_length",
+                max_length=512,
+                add_special_tokens=True,
             )
             inputs = {key: value.to(device) for key, value in inputs.items()}
-            # outputs = model(**inputs)
-            # Use the average of the last hidden states as the line's embedding
-            # last_hidden_states = outputs.last_hidden_state
-            # mean_embedding = torch.mean(last_hidden_states, dim=1)
-            with torch.no_grad():  # Ensure no gradients are computed for memory efficiency
-                outputs = model(**inputs)
-                cls_embedding = outputs.last_hidden_state[:, 0, :]
-                embeddings.append(cls_embedding.squeeze().cpu().numpy())
+            outputs = model(**inputs)
+            cls_embeddings = outputs.last_hidden_state[
+                :, 0, :
+            ]  # Extract the [CLS] token's embeddings for each line
+            cls_embeddings = (
+                cls_embeddings.cpu().numpy()
+            )  # Move embeddings to CPU and convert to numpy for easier handling
+            embeddings.extend(cls_embeddings)
 
     return embeddings
 
