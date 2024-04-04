@@ -17,7 +17,7 @@ if __name__ == "__main__":
     parser.add_argument("--languages", "-l", default="de-en-es-fi-fr-se")
 
     # Trainer
-    parser.add_argument("--learning_rate", "-lr", type=float, default=3e-5)
+    parser.add_argument("--learning_rate", "-lr", type=float, default=1e-5)
     parser.add_argument("--train_batch_size", "-bt", type=int, default=8)
     parser.add_argument("--eval_batch_size", "-bd", type=int, default=8)
     parser.add_argument("--max_length", type=int, default=512)

@@ -43,7 +43,7 @@ def run(cfg):
         evaluation_strategy="epoch",
         save_strategy="epoch",
         logging_strategy="epoch",
-        eval_accumulation_steps=8,
+        eval_accumulation_steps=1,
         metric_for_best_model="eval_loss",
         load_best_model_at_end=True,
         save_total_limit=2,

@@ -6,6 +6,8 @@ import torch.nn as nn
 
 from .classifier import DocumentClassifier
 
+from tqdm import tqdm
+
 
 def run(cfg):
 
@@ -23,44 +25,48 @@ def run(cfg):
             for item in data:
                 documents[split].append(item)
 
-    def extract_cls_embeddings_and_labels(doc, tokenizer, model):
-        print(doc)
-        cls_embeddings = []  # To store [CLS] embeddings of each line
-        labels = []  # To store labels for each line
+    def extract_cls_embeddings_and_labels(docs, tokenizer, model, batch_size=32):
+        all_cls_embeddings = []
+        all_labels = []
 
-        # Process each line and collect labels
-        for line, label in zip(doc["text"], doc["labels"]):
-            # Tokenize the line, adding special tokens
+        # Process documents in batches
+        for i in range(0, len(docs["text"]), batch_size):
+            batch_texts = docs["text"][i : i + batch_size]
+            batch_labels = [int(x) for x in docs["labels"][i : i + batch_size]]
+
+            # Tokenize the batch of lines
             inputs = tokenizer(
-                line,
+                batch_texts,
                 return_tensors="pt",
                 max_length=512,
                 truncation=True,
                 padding="max_length",
                 add_special_tokens=True,
-            )
-            outputs = model(**inputs)
+            ).to(
+                model.device
+            )  # Ensure inputs are on the same device as the model
 
-            # Extract the [CLS] token's embedding
-            cls_embedding = outputs.last_hidden_state[:, 0, :]
-            cls_embeddings.append(cls_embedding)
+            # Perform inference and detach to avoid memory issues
+            with torch.no_grad():  # Ensure no gradients are computed for memory efficiency
+                outputs = model(**inputs)
+                cls_embeddings = outputs.last_hidden_state[
+                    :, 0, :
+                ].detach()  # Extract and detach [CLS] embeddings
 
-            # Collect label
-            labels.append(int(label))
+            all_cls_embeddings.append(cls_embeddings)
+            all_labels.extend(batch_labels)  # Collect labels
 
-        # Stack [CLS] embeddings to form the document matrix [seq_length, embedding_dim]
-        doc_matrix = torch.stack(cls_embeddings).squeeze(
-            1
-        )  # Remove batch dimension if necessary
-
-        # Convert labels list to a tensor
-        labels_tensor = torch.tensor(labels, dtype=torch.float)
+        # Concatenate all [CLS] embeddings and labels collected from each batch
+        doc_matrix = torch.cat(
+            all_cls_embeddings, dim=0
+        )  # Concatenate along the batch dimension
+        labels_tensor = torch.tensor(all_labels, dtype=torch.float)
 
         return doc_matrix, labels_tensor
 
     # Example: Extract embeddings for the first document
     doc_matrix, labels = extract_cls_embeddings_and_labels(
-        documents["train"][2], tokenizer, model
+        documents["train"][0], tokenizer, model
     )
     print(doc_matrix.shape)  # Should be [seq_length, 1024] for xlm-roberta-large
     print(doc_matrix)
@@ -88,7 +94,7 @@ def run(cfg):
         embeddings_list = []
         labels_list = []
 
-        for doc in documents:
+        for doc in tqdm(documents):
             doc_embeddings, doc_labels = extract_cls_embeddings_and_labels(
                 doc, tokenizer, model
             )
@@ -139,13 +145,17 @@ def run(cfg):
 
     # Assuming binary classification with labels in {0, 1}
     criterion = nn.BCEWithLogitsLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-5)
 
-    for epoch in range(1):
+    for epoch in range(5):
         model.train()  # Set the model to training mode
         total_loss = 0  # Reset total loss for each epoch
 
         for batch_embeddings, batch_labels in train_loader:
+            print(batch_embeddings.shape)
+            print(batch_labels.shape)
+            print(batch_labels)
+            exit()
             optimizer.zero_grad()  # Reset gradients for the current batch
 
             # Forward pass: Compute the model output for the current batch
