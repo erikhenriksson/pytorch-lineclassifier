@@ -141,7 +141,7 @@ def run(cfg):
         embedding_dim=embedding_dim,
         hidden_dim=hidden_dim,
         num_layers=num_layers,
-        num_classes=num_classes,
+        # num_classes=num_classes,
     )
 
     criterion = nn.BCEWithLogitsLoss(reduction="none")
