@@ -19,10 +19,6 @@ def run(cfg):
     tokenizer = XLMRobertaTokenizer.from_pretrained("xlm-roberta-large")
     model = XLMRobertaModel.from_pretrained(cfg.model_name).to(device)
 
-    if os.path.exists("train_embeddings.pkl"):
-        print("Embeddings exist already! Delete them first.")
-        exit()
-
     # Load documents
     documents = {"train": [], "dev": [], "test": []}
     for language in cfg.languages.split("-"):
@@ -109,7 +105,7 @@ def run(cfg):
 
         return padded_embeddings, padded_labels
 
-    for split in ["train", "dev", "test"]:
+    for split in cfg.splits:
         documents_to_process = documents[split]
         if cfg.sample:
             documents_to_process = documents_to_process[: cfg.sample]

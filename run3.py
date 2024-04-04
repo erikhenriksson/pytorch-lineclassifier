@@ -16,6 +16,7 @@ if __name__ == "__main__":
     parser.add_argument("--seed", "-s", type=int, default=42)
     parser.add_argument("--sample", "-sa", type=int, default=0)
     parser.add_argument("--languages", "-l", default="de-en-es-fi-fr-se")
+    parser.add_argument("--splits", default="train-dev-test")
 
     # Trainer
     parser.add_argument("--learning_rate", "-lr", type=float, default=3e-5)
