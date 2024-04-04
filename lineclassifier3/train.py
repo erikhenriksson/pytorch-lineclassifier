@@ -147,13 +147,13 @@ def run(cfg):
     criterion = nn.BCEWithLogitsLoss(reduction="none")
 
     # Assume optimizer and model initialization remains unchanged
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-6, weight_decay=0.01)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-7, weight_decay=0.01)
     # Placeholder for a chosen scheduler, you might choose a different one based on your requirements
     scheduler = StepLR(optimizer, step_size=30, gamma=0.1)
 
     # Placeholder variables for demonstration
-    initial_lr = 1e-7
-    target_lr = 1e-6
+    initial_lr = 1e-8
+    target_lr = 1e-7
     warmup_steps = 50
     num_epochs = 50
 
