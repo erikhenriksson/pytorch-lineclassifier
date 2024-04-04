@@ -131,7 +131,7 @@ def run(cfg):
 
     # Example of initializing the SimpleRNNClassifier
     embedding_dim = 1024  # The size of each line embedding
-    hidden_dim = 512  # Hidden dimension size in LSTM
+    hidden_dim = 2048  # Hidden dimension size in LSTM
     num_layers = 2  # Number of LSTM layers
     num_classes = (
         1  # For binary classification, use 1; for multi-class, change accordingly
