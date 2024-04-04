@@ -142,7 +142,7 @@ def run(cfg):
         hidden_dim=hidden_dim,
         num_layers=num_layers,
         # num_classes=num_classes,
-    )
+    ).to(device)
 
     criterion = nn.BCEWithLogitsLoss(reduction="none")
 
