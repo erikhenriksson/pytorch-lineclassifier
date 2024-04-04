@@ -108,6 +108,8 @@ def run(cfg):
     with open("test_labels.pkl", "rb") as f:
         test_labels = pickle.load(f)
 
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
     model = XLMRobertaModel.from_pretrained(cfg.model_name).to(device)
     finetuned_classification_head = model.classifier
 
@@ -127,7 +129,6 @@ def run(cfg):
     )  # No labels for test
     test_loader = DataLoader(test_dataset, batch_size=8, shuffle=False)
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = DocumentClassifier(
         embedding_dim=1024,
         nhead=4,
