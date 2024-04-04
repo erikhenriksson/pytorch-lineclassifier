@@ -127,7 +127,7 @@ def run(cfg):
     model = DocumentClassifier(embedding_dim=1024, nhead=8, nhid=2048, nlayers=6).to(
         device
     )
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-6)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-6, weight_decay=1e-4)
     criterion = nn.BCEWithLogitsLoss(reduction="none")
 
     for epoch in range(15):
