@@ -27,7 +27,7 @@ def run(cfg):
     documents = {"train": [], "dev": [], "test": []}
     for language in cfg.languages.split("-"):
         for split in ["train", "dev", "test"]:
-            with open(f"data/{language}/dev.json", "r", encoding="utf-8") as file:
+            with open(f"data/{language}/{split}.json", "r", encoding="utf-8") as file:
                 data = json.load(file)
             for item in data:
                 documents[split].append(item)
