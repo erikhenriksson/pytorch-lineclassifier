@@ -108,6 +108,9 @@ def run(cfg):
     with open("test_labels.pkl", "rb") as f:
         test_labels = pickle.load(f)
 
+    model = XLMRobertaModel.from_pretrained(cfg.model_name).to(device)
+    finetuned_classification_head = model.classifier
+
     # Prepare DataLoader for training, dev, and test sets
     train_dataset = TensorDataset(
         torch.FloatTensor(train_embeddings.cpu()), torch.FloatTensor(train_labels.cpu())
@@ -125,9 +128,13 @@ def run(cfg):
     test_loader = DataLoader(test_dataset, batch_size=8, shuffle=False)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = DocumentClassifier(embedding_dim=1024, nhead=4, nhid=2048, nlayers=6).to(
-        device
-    )
+    model = DocumentClassifier(
+        embedding_dim=1024,
+        nhead=4,
+        nhid=2048,
+        nlayers=6,
+        classification_head=finetuned_classification_head,
+    ).to(device)
 
     # Example of initializing the SimpleRNNClassifier
     # embedding_dim = 1024  # The size of each line embedding

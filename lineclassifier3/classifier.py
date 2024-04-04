@@ -3,7 +3,9 @@ from torch.nn import TransformerEncoder, TransformerEncoderLayer
 
 
 class DocumentClassifier(nn.Module):
-    def __init__(self, embedding_dim, nhead, nhid, nlayers, dropout=0.5):
+    def __init__(
+        self, embedding_dim, nhead, nhid, nlayers, dropout=0.5, classification_head=None
+    ):
         super(DocumentClassifier, self).__init__()
         self.encoder_layer = TransformerEncoderLayer(
             d_model=embedding_dim, nhead=nhead, dim_feedforward=nhid, dropout=dropout
@@ -11,9 +13,13 @@ class DocumentClassifier(nn.Module):
         self.transformer_encoder = TransformerEncoder(
             self.encoder_layer, num_layers=nlayers
         )
-        self.decoder = nn.Linear(
-            embedding_dim, 1
-        )  # Binary classification for each line
+        # Use the provided classification head if available; otherwise, initialize a new linear layer
+        if classification_head is not None:
+            self.decoder = classification_head
+        else:
+            self.decoder = nn.Linear(
+                embedding_dim, 1
+            )  # Fallback to default if no external head is provided
 
     def forward(self, src, src_mask=None):
         encoded_src = self.transformer_encoder(src, src_key_padding_mask=src_mask)
