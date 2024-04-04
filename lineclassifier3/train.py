@@ -111,10 +111,10 @@ def run(cfg):
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    model = XLMRobertaForSequenceClassification.from_pretrained(cfg.model_name).to(
-        device
-    )
-    finetuned_classification_head = model.classifier
+    tuned_model = XLMRobertaForSequenceClassification.from_pretrained(
+        cfg.model_name
+    ).to(device)
+    finetuned_classification_head = tuned_model.classifier
 
     # Prepare DataLoader for training, dev, and test sets
     train_dataset = TensorDataset(
