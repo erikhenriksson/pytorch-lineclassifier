@@ -13,9 +13,11 @@ import os
 
 def run(cfg):
 
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
     # Load model and tokenizer
     tokenizer = XLMRobertaTokenizer.from_pretrained("xlm-roberta-large")
-    model = XLMRobertaModel.from_pretrained(cfg.model_name)
+    model = XLMRobertaModel.from_pretrained(cfg.model_name).to(device)
 
     if os.path.exists("train_embeddings.pkl"):
         print("Embeddings exist already! Delete them first.")
