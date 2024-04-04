@@ -103,9 +103,6 @@ def run(cfg):
             embeddings_list.append(doc_embeddings)
             labels_list.append(doc_labels)
 
-        print(embeddings_list)
-        print(labels_list)
-
         # Pad the embeddings and labels to have the same sequence length
         padded_embeddings = pad_tensors(embeddings_list, pad_token=0)
         padded_labels = pad_tensors(labels_list, pad_token=-100, is_embedding=False)

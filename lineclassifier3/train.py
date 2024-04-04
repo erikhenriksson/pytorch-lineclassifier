@@ -111,17 +111,17 @@ def run(cfg):
     train_dataset = TensorDataset(
         torch.FloatTensor(train_embeddings.cpu()), torch.FloatTensor(train_labels.cpu())
     )
-    train_loader = DataLoader(train_dataset, batch_size=2, shuffle=True)
+    train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True)
 
     dev_dataset = TensorDataset(
         torch.FloatTensor(dev_embeddings.cpu()), torch.FloatTensor(dev_labels.cpu())
     )
-    dev_loader = DataLoader(dev_dataset, batch_size=2, shuffle=False)
+    dev_loader = DataLoader(dev_dataset, batch_size=8, shuffle=False)
 
     test_dataset = TensorDataset(
         torch.FloatTensor(test_embeddings.cpu())
     )  # No labels for test
-    test_loader = DataLoader(test_dataset, batch_size=2, shuffle=False)
+    test_loader = DataLoader(test_dataset, batch_size=8, shuffle=False)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = DocumentClassifier(embedding_dim=1024, nhead=8, nhid=2048, nlayers=6).to(
