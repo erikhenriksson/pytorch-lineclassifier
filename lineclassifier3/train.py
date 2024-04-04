@@ -3,6 +3,8 @@ import json
 from transformers import XLMRobertaModel, XLMRobertaTokenizer
 import torch
 import torch.nn as nn
+from torch.optim.lr_scheduler import StepLR
+
 
 from sklearn.metrics import accuracy_score, f1_score
 
@@ -67,9 +69,7 @@ def evaluate(model, data_loader, device):
     accuracy = accuracy_score(all_true_labels, all_predictions)
     f1 = f1_score(all_true_labels, all_predictions)
 
-    print(f1)
-
-    return average_loss
+    return average_loss, accuracy, f1
 
 
 def predict(model, data_loader, device):
@@ -127,55 +127,73 @@ def run(cfg):
     model = DocumentClassifier(embedding_dim=1024, nhead=8, nhid=2048, nlayers=6).to(
         device
     )
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-6, weight_decay=1e-4)
+
     criterion = nn.BCEWithLogitsLoss(reduction="none")
 
-    for epoch in range(15):
-        model.train()  # Set the model to training mode
+    # Assume optimizer and model initialization remains unchanged
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-5, weight_decay=1e-4)
+    # Placeholder for a chosen scheduler, you might choose a different one based on your requirements
+    scheduler = StepLR(optimizer, step_size=30, gamma=0.1)
+
+    # Placeholder variables for demonstration
+    initial_lr = 1e-7
+    target_lr = 1e-5
+    warmup_steps = 100
+    num_epochs = 15
+
+    for epoch in range(num_epochs):
+        model.train()
         total_loss = 0
         n_elements = 0
 
-        for batch_embeddings, batch_labels in train_loader:
-            optimizer.zero_grad()
-
+        for step, (batch_embeddings, batch_labels) in enumerate(train_loader):
             batch_embeddings, batch_labels = batch_embeddings.to(
                 device
             ), batch_labels.to(device)
-
-            # Transpose batch_embeddings to (seq_len, batch_size, feature) for the Transformer model
-            batch_embeddings = batch_embeddings.transpose(0, 1)
-
-            # Generate src_mask with shape (batch_size, seq_len), correctly indicating padded positions
-            src_mask = (batch_embeddings.sum(dim=-1) == 0).transpose(
+            batch_embeddings = batch_embeddings.transpose(
                 0, 1
-            )  # Transpose back to (batch_size, seq_len) for the mask
+            )  # Transpose for Transformer
 
-            # Forward pass
+            # Warmup logic
+            if epoch * len(train_loader) + step < warmup_steps:
+                lr_scale = (epoch * len(train_loader) + step + 1) / warmup_steps
+                lr = initial_lr + lr_scale * (target_lr - initial_lr)
+                for param_group in optimizer.param_groups:
+                    param_group["lr"] = lr
+            elif epoch * len(train_loader) + step == warmup_steps:
+                for param_group in optimizer.param_groups:
+                    param_group["lr"] = target_lr
+
+            optimizer.zero_grad()
+
+            # Assuming the padding in batch_embeddings is represented by all-zero vectors
+            src_mask = (batch_embeddings.sum(dim=-1) == 0).transpose(0, 1)
             output = model(batch_embeddings, src_mask=src_mask)
-            output = output.view(-1)  # Flatten output
+            output = output.view(-1)
 
-            # Prepare labels and mask for loss computation
             labels_flat = batch_labels.view(-1)
             loss_mask = (
                 labels_flat != -100
             )  # Mask to exclude padded elements in loss calculation
+            valid_output = output[loss_mask]
+            valid_labels = labels_flat[loss_mask]
 
-            # Compute loss only for non-padded labels
-            loss = criterion(output[loss_mask], labels_flat[loss_mask])
-            loss = loss.mean()  # Take the mean of the remaining losses
+            loss = criterion(valid_output, valid_labels).mean()
             loss.backward()
             optimizer.step()
 
-            total_loss += (
-                loss.item() * loss_mask.sum().item()
-            )  # Accumulate the total loss
-            n_elements += loss_mask.sum().item()  # Count the non-padded elements
+            total_loss += loss.item() * loss_mask.sum().item()
+            n_elements += loss_mask.sum().item()
 
-        average_loss = (
-            total_loss / n_elements
-        )  # Calculate the average loss for the epoch
+        # After warmup, adjust learning rate based on the scheduler
+        if epoch >= warmup_steps / len(train_loader):
+            scheduler.step()
+
+        average_loss = total_loss / n_elements
         print(f"Epoch {epoch+1}, Training Average Loss: {average_loss}")
 
         # Evaluate on dev data after each training epoch
-        dev_loss = evaluate(model, dev_loader, device)
-        print(f"Epoch {epoch+1}, Dev Loss: {dev_loss}")
+        dev_loss, dev_accuracy, dev_f1 = evaluate(model, dev_loader, device)
+        print(
+            f"Epoch {epoch+1}, Dev Loss: {dev_loss}, Dev Accuracy: {dev_accuracy}, Dev F1 Score: {dev_f1}"
+        )
