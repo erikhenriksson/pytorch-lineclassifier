@@ -11,25 +11,11 @@ os.environ["WANDB_DISABLED"] = "true"
 if __name__ == "__main__":
     parser = ArgumentParser()
     # Main args
-    parser.add_argument("--method", "-me", default="predict")
     parser.add_argument("--model_name", "-m", default="xlm-roberta-large")
     parser.add_argument("--data", "-d", default="")
-    parser.add_argument("--seed", "-s", type=int, default=42)
-    parser.add_argument("--sample", "-sa", type=int, default=0)
-    parser.add_argument("--languages", "-l", default="de-en-es-fi-fr-se")
-    parser.add_argument("--splits", default="train-dev-test")
-
-    # Trainer
-    parser.add_argument("--learning_rate", "-lr", type=float, default=3e-5)
-    parser.add_argument("--train_batch_size", "-bt", type=int, default=8)
-    parser.add_argument("--eval_batch_size", "-bd", type=int, default=8)
-    parser.add_argument("--epochs", "-e", type=int, default=10)
-    parser.add_argument("--max_length", type=int, default=512)
-    parser.add_argument("--device", default="cuda")
+    parser.add_argument("--language", "-l", default="sv")
 
     cfg = parser.parse_args()
     print(parser.dump(cfg))
 
-    method = cfg.method if cfg.method != "test" else "train"
-
-    locate(f"lineclassifier5.{method}").run(cfg)
+    locate(f"lineclassifier5.predict").run(cfg)

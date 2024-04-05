@@ -21,7 +21,7 @@ def stream_zst_json_lines(file_path, lang):
                     if label and label["label"] == lang:
                         data.append(line)
 
-                yield data
+                yield data, doc_parsed["warc_headers"]["warc-record-id"]
 
 
 def run(cfg):
@@ -34,10 +34,12 @@ def run(cfg):
 
     # Example usage
     file_path = cfg.data
-    for json_object in stream_zst_json_lines(file_path, "sv"):
 
-        lines = json_object
+    for json_object in stream_zst_json_lines(file_path, cfg.language):
+
+        lines, rec_id = json_object
         non_junk_lines = []
+        print("---")
 
         for line in lines:
             inputs = tokenizer(
@@ -50,7 +52,9 @@ def run(cfg):
             inputs = {key: value.to(device) for key, value in inputs.items()}
             with torch.no_grad():
                 outputs = tuned_model(**inputs)
+
                 predictions = torch.argmax(outputs.logits, dim=-1)
+
                 is_not_junk = (
                     predictions.item() == 1
                 )  # Adjust label index according to your model
@@ -58,11 +62,14 @@ def run(cfg):
                 if is_not_junk:
                     non_junk_lines.append(line)
 
-        result_text = "\n".join(non_junk_lines)
-        print(result_text)
-        exit()
-        return result_text
+                else:
+                    print(f"JUNK LINE: {line}")
 
-        # FOR EACH LINE, USE THE MODEL TO PREDICT THE LABEL (JUNK OR NOT JUNK)
-
-        # THEN, CONCATENATE THE LINES THAT ARE NOT JUNK WITH "\N"
+        result_text = " ".join(non_junk_lines)
+        out_file = cfg.data.split("/")[-1].split(".zst")[0]
+        if result_text:
+            with open(f"cleaned/{out_file}", "a", encoding="utf-8") as file:
+                file.write(
+                    json.dumps({"id": rec_id, "text": result_text}, ensure_ascii=False)
+                    + "\n"
+                )
