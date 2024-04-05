@@ -119,10 +119,15 @@ def run(cfg):
     test_dataloader = DataLoader(
         test_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn
     )
-
+    # Example model parameters
+    embedding_dim = 1024  # Dimensionality of the line embeddings
+    max_len = 500  # Maximum length of a document
+    num_heads = 8
+    num_encoder_layers = 3
+    num_classes = 1  # For binary classification
     # Assume the model is already created as 'model'
     model = TransformerForLineClassification(
-        embedding_dim=1024, nhead=8, num_encoder_layers=6, num_classes=1
+        embedding_dim, max_len, num_heads, num_encoder_layers, num_classes
     ).to(device)
 
     data_len = len(train_dataloader)
