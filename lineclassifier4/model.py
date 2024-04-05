@@ -41,7 +41,7 @@ class TransformerForLineClassification(nn.Module):
         self.classifier = nn.Linear(embedding_dim, num_classes)
 
     def forward(self, src):
-        src = self.positional_encoding(src)
+        # src = self.positional_encoding(src)
         output = self.transformer_encoder(src)
         logits = self.classifier(output)
         return torch.sigmoid(logits)
