@@ -113,8 +113,14 @@ def run(cfg):
             predictions = model(embeddings).squeeze()
 
             mask = labels != -1
-            print(predictions)
-            print(mask)
+            # Ensure predictions are always 2-dimensional
+            if predictions.dim() == 0:
+                predictions = predictions.unsqueeze(0).unsqueeze(
+                    0
+                )  # Adjust for a single value
+            elif predictions.dim() == 1:
+                predictions = predictions.unsqueeze(0)  # Adjust for a single line
+
             valid_labels = labels[mask]  # Filters out padded labels
             valid_predictions = predictions[
                 mask
