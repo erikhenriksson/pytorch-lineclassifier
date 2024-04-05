@@ -11,3 +11,4 @@ log
 wandb
 checkpoints
 tokens_cache
+documents_*
