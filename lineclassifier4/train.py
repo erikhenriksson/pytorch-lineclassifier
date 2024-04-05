@@ -99,6 +99,9 @@ def run(cfg):
             # Forward pass: Compute predicted labels by passing embeddings to the model
             predictions = model(embeddings).squeeze()
 
+            print(predictions)
+            print(labels)
+
             # Calculate loss
             loss = criterion(predictions, labels)
 
