@@ -11,8 +11,9 @@ os.environ["WANDB_DISABLED"] = "true"
 if __name__ == "__main__":
     parser = ArgumentParser()
     # Main args
-    parser.add_argument("--method", "-me", default="train")
+    parser.add_argument("--method", "-me", default="predict")
     parser.add_argument("--model_name", "-m", default="xlm-roberta-large")
+    parser.add_argument("--data", "-d", default="")
     parser.add_argument("--seed", "-s", type=int, default=42)
     parser.add_argument("--sample", "-sa", type=int, default=0)
     parser.add_argument("--languages", "-l", default="de-en-es-fi-fr-se")
