@@ -74,7 +74,7 @@ def evaluate(model, dataloader, device):
             )  # Correspondingly filters predictions to match valid labels
 
             # Threshold predictions for binary classification
-            valid_predictions = (valid_predictions > 0.5).astype(np.int)
+            valid_predictions = (valid_predictions > 0.5).astype(np.int32)
 
             all_labels.extend(valid_labels)
             all_predictions.extend(valid_predictions)
