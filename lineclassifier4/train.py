@@ -99,11 +99,19 @@ def run(cfg):
             # Forward pass: Compute predicted labels by passing embeddings to the model
             predictions = model(embeddings).squeeze()
 
-            print(predictions)
-            print(labels)
+            mask = (
+                labels != -1
+            )  # Creates a mask of the same shape as labels, with `True` for valid labels and `False` for padded ones (-1)
+            valid_labels = labels[mask]  # Filters out padded labels
+            valid_predictions = predictions[
+                mask
+            ]  # Correspondingly filters predictions to match valid labels
+
+            # Now compute loss on valid_predictions and valid_labels only
+            loss = criterion(valid_predictions, valid_labels)
 
             # Calculate loss
-            loss = criterion(predictions, labels)
+            # loss = criterion(predictions, labels)
 
             # Backward pass and optimize
             optimizer.zero_grad()
