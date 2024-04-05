@@ -122,7 +122,7 @@ def run(cfg):
 
     # Assume the model is already created as 'model'
     model = TransformerForLineClassification(
-        embedding_dim=1024, nhead=8, num_encoder_layers=6, num_classes=1
+        embedding_dim=1024, nhead=4, num_encoder_layers=3, num_classes=1
     ).to(device)
 
     data_len = len(train_dataloader)
