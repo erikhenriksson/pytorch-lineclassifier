@@ -174,32 +174,6 @@ def run(cfg):
         avg_loss, f1, accuracy = evaluate(model, dev_dataloader, device)
         print(f"Validation Loss: {avg_loss}, F1 Score: {f1}, Accuracy: {accuracy}")
 
-    # Training Loop
-    for epoch in range(cfg.epochs):
-        # Train on training data
-        model.train()
-        total_loss = 0
-        for embeddings_padded, labels_padded in train_dataloader:
-            optimizer.zero_grad()
-
-            # Forward pass
-            predictions = model(embeddings_padded).squeeze()
-
-            # Calculate loss only for non-padded values
-            mask = labels_padded != -1  # Assuming -1 used for padding labels
-            loss = criterion(predictions[mask], labels_padded[mask])
-
-            # Backward pass and optimize
-            loss.backward()
-            optimizer.step()
-
-            total_loss += loss.item()
-
-        print(f"Epoch {epoch+1}, Loss: {total_loss / len(train_dataloader)}")
-
-        validation_loss = evaluate(model, dev_dataloader)
-        print(validation_loss)
-
     print("Testing..")
-    test_loss = evaluate(model, test_dataloader)
-    print(test_loss)
+    avg_loss, f1, accuracy = evaluate(model, test_dataloader, device)
+    print(f"Test Loss: {avg_loss}, F1 Score: {f1}, Accuracy: {accuracy}")
