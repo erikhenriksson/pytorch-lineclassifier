@@ -3,16 +3,14 @@ import torch.nn as nn
 
 
 class TransformerForLineClassification(nn.Module):
-    def __init__(
-        self, embedding_dim, max_len, num_heads, num_encoder_layers, num_classes
-    ):
+    def __init__(self, embedding_dim, max_len, nhead, num_encoder_layers, num_classes):
         super(TransformerForLineClassification, self).__init__()
         self.line_embeddings = nn.Linear(
             embedding_dim, embedding_dim
         )  # Assuming input embeddings are already of correct dimension
         self.positional_embeddings = nn.Embedding(max_len, embedding_dim)
         self.encoder_layer = nn.TransformerEncoderLayer(
-            d_model=embedding_dim, nhead=num_heads
+            d_model=embedding_dim, nhead=nhead
         )
         self.transformer_encoder = nn.TransformerEncoder(
             self.encoder_layer, num_layers=num_encoder_layers
