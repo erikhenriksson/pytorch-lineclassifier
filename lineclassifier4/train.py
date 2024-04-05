@@ -27,6 +27,7 @@ class DocumentDataset(Dataset):
     def __getitem__(self, idx):
         document = self.documents[idx]
         # Extract embeddings and labels from the document's lines
+        print(document)
         embeddings, labels = zip(*document["text"])
         # Convert the embeddings and labels into tensors
         embeddings_tensor = torch.stack(
@@ -54,7 +55,14 @@ def evaluate(model, dataloader):
         for embeddings, labels in dataloader:
             embeddings, labels = embeddings.to(device), labels.to(device)
             predictions = model(embeddings).squeeze()
-            loss = criterion(predictions, labels)
+            mask = labels != -1
+            valid_labels = labels[mask]  # Filters out padded labels
+            valid_predictions = predictions[
+                mask
+            ]  # Correspondingly filters predictions to match valid labels
+
+            # Now compute loss on valid_predictions and valid_labels only
+            loss = criterion(valid_predictions, valid_labels)
             total_loss += loss.item()
 
     return total_loss / len(dataloader)
@@ -99,9 +107,7 @@ def run(cfg):
             # Forward pass: Compute predicted labels by passing embeddings to the model
             predictions = model(embeddings).squeeze()
 
-            mask = (
-                labels != -1
-            )  # Creates a mask of the same shape as labels, with `True` for valid labels and `False` for padded ones (-1)
+            mask = labels != -1
             valid_labels = labels[mask]  # Filters out padded labels
             valid_predictions = predictions[
                 mask
