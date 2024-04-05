@@ -110,11 +110,11 @@ def run(cfg):
             embeddings, labels = embeddings.to(device), labels.to(device)
 
             # Forward pass: Compute predicted labels by passing embeddings to the model
-            predictions = model(embeddings)
+            predictions = model(embeddings).squeeze()
 
             mask = labels != -1
-            print(predictions.shape)
-            print(mask.shape)
+            print(predictions)
+            print(mask)
             valid_labels = labels[mask]  # Filters out padded labels
             valid_predictions = predictions[
                 mask
