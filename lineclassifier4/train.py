@@ -80,7 +80,7 @@ def run(cfg):
 
     print(train_dataset[0])
 
-    batch_size = 32  # Define your batch size; adjust as necessary
+    batch_size = 4  # Define your batch size; adjust as necessary
 
     train_dataloader = DataLoader(
         train_dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn
