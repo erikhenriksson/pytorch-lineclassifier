@@ -133,7 +133,7 @@ def run(cfg):
     avg_loss, f1, accuracy = evaluate(model, test_dataloader, device)
     print(f"Test Loss: {avg_loss}, F1 Score: {f1}, Accuracy: {accuracy}")
 
-    optimizer = optim.Adam(model.parameters(), lr=1e-7, weight_decay=0.001)
+    optimizer = optim.Adam(model.parameters(), lr=1e-7, weight_decay=0.1)
     for epoch in range(cfg.epochs):
         model.train()  # Set the model to training mode
         total_loss = 0
