@@ -49,14 +49,12 @@ def collate_fn(batch):
 def evaluate(model, dataloader):
     model.eval()  # Set the model to evaluation mode
     total_loss = 0
-    with torch.no_grad():
-        for embeddings_padded, labels_padded in dataloader:
-            predictions = model(embeddings_padded).squeeze()
 
-            # Calculate loss only for non-padded values
-            mask = labels_padded != -1
-            loss = criterion(predictions[mask], labels_padded[mask])
-
+    with torch.no_grad():  # Inference mode, no backpropagation
+        for embeddings, labels in dataloader:
+            embeddings, labels = embeddings.to(device), labels.to(device)
+            predictions = model(embeddings).squeeze()
+            loss = criterion(predictions, labels)
             total_loss += loss.item()
 
     return total_loss / len(dataloader)
@@ -88,7 +86,7 @@ def run(cfg):
     # Assume the model is already created as 'model'
     model = TransformerForLineClassification(
         embedding_dim=1024, nhead=8, num_encoder_layers=3, num_classes=1
-    )
+    ).to(device)
 
     optimizer = optim.Adam(model.parameters(), lr=0.001)
     for epoch in range(cfg.epochs):
@@ -115,6 +113,8 @@ def run(cfg):
         print(
             f"Epoch [{epoch+1}/{cfg.epochs}], Loss: {total_loss / len(train_dataloader)}"
         )
+        validation_loss = evaluate(model, dev_dataloader)
+        print(f"Validation Loss: {validation_loss}")
 
     exit()
 
