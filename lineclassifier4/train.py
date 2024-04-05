@@ -27,7 +27,6 @@ class DocumentDataset(Dataset):
     def __getitem__(self, idx):
         document = self.documents[idx]
         # Extract embeddings and labels from the document's lines
-        print(document)
         embeddings, labels = zip(*document["text"])
         # Convert the embeddings and labels into tensors
         embeddings_tensor = torch.stack(
@@ -73,9 +72,11 @@ def run(cfg):
         loaded_data = pickle.load(f)
 
     # Create separate dataset instances for train, dev, and test
-    train_dataset = DocumentDataset(loaded_data["train"])
-    dev_dataset = DocumentDataset(loaded_data["dev"])
-    test_dataset = DocumentDataset(loaded_data["test"])
+    train_dataset = DocumentDataset(
+        [doc for doc in loaded_data["train"] if doc["text"]]
+    )
+    dev_dataset = DocumentDataset([doc for doc in loaded_data["dev"] if doc["text"]])
+    test_dataset = DocumentDataset([doc for doc in loaded_data["test"] if doc["text"]])
 
     print(train_dataset[0])
 
