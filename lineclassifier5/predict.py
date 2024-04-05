@@ -34,12 +34,12 @@ def run(cfg):
 
     # Example usage
     file_path = cfg.data
+    i = 0
 
     for json_object in stream_zst_json_lines(file_path, cfg.language):
 
         lines, rec_id = json_object
         non_junk_lines = []
-        print("---")
 
         for line in lines:
             inputs = tokenizer(
@@ -62,9 +62,6 @@ def run(cfg):
                 if is_not_junk:
                     non_junk_lines.append(line)
 
-                else:
-                    print(f"JUNK LINE: {line}")
-
         result_text = " ".join(non_junk_lines)
         out_file = cfg.data.split("/")[-1].split(".zst")[0]
         if result_text:
@@ -73,3 +70,5 @@ def run(cfg):
                     json.dumps({"id": rec_id, "text": result_text}, ensure_ascii=False)
                     + "\n"
                 )
+
+        i += 1
