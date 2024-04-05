@@ -97,6 +97,10 @@ def run(cfg):
         embedding_dim=1024, nhead=8, num_encoder_layers=3, num_classes=1
     ).to(device)
 
+    data_len = len(train_dataloader)
+
+    print(data_len)
+
     optimizer = optim.Adam(model.parameters(), lr=0.001)
     for epoch in range(cfg.epochs):
         model.train()  # Set the model to training mode
@@ -106,7 +110,7 @@ def run(cfg):
             embeddings, labels = embeddings.to(device), labels.to(device)
 
             # Forward pass: Compute predicted labels by passing embeddings to the model
-            predictions = model(embeddings).squeeze()
+            predictions = model(embeddings)
 
             mask = labels != -1
             print(predictions.shape)
