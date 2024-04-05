@@ -109,6 +109,8 @@ def run(cfg):
             predictions = model(embeddings).squeeze()
 
             mask = labels != -1
+            print(predictions.shape)
+            print(mask.shape)
             valid_labels = labels[mask]  # Filters out padded labels
             valid_predictions = predictions[
                 mask
