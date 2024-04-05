@@ -127,7 +127,9 @@ def run(cfg):
 
     data_len = len(train_dataloader)
 
-    print(data_len)
+    print(f"Train len: {len(train_dataloader)}")
+    print(f"Dev len: {len(dev_dataloader)}")
+    print(f"Test len: {len(test_dataloader)}")
 
     print("Testing..")
     avg_loss, f1, accuracy = evaluate(model, test_dataloader, device)
