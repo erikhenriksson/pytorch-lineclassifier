@@ -174,8 +174,6 @@ def run(cfg):
         avg_loss, f1, accuracy = evaluate(model, dev_dataloader, device)
         print(f"Validation Loss: {avg_loss}, F1 Score: {f1}, Accuracy: {accuracy}")
 
-    exit()
-
     # Training Loop
     for epoch in range(cfg.epochs):
         # Train on training data
@@ -201,10 +199,7 @@ def run(cfg):
 
         validation_loss = evaluate(model, dev_dataloader)
         print(validation_loss)
-    exit()
-    # Finally, evaluate performance on test data
-    model.eval()
-    with torch.no_grad():
-        for embeddings_padded, labels_padded in test_dataloader:
-            # Testing steps...
-            pass
+
+    print("Testing..")
+    test_loss = evaluate(model, test_dataloader)
+    print(test_loss)
