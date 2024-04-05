@@ -2,11 +2,11 @@ import torch
 import torch.nn as nn
 
 
-class TransformerWithPositionalEmbeddings(nn.Module):
+class TransformerForLineClassification(nn.Module):
     def __init__(
         self, embedding_dim, max_len, num_heads, num_encoder_layers, num_classes
     ):
-        super(TransformerWithPositionalEmbeddings, self).__init__()
+        super(TransformerForLineClassification, self).__init__()
         self.line_embeddings = nn.Linear(
             embedding_dim, embedding_dim
         )  # Assuming input embeddings are already of correct dimension
