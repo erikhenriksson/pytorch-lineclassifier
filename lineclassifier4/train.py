@@ -122,14 +122,14 @@ def run(cfg):
 
     # Assume the model is already created as 'model'
     model = TransformerForLineClassification(
-        embedding_dim=1024, nhead=8, num_encoder_layers=3, num_classes=1
+        embedding_dim=1024, nhead=8, num_encoder_layers=6, num_classes=1
     ).to(device)
 
     data_len = len(train_dataloader)
 
     print(data_len)
 
-    optimizer = optim.Adam(model.parameters(), lr=1e-7, weight_decay=0.1)
+    optimizer = optim.Adam(model.parameters(), lr=1e-7, weight_decay=0.001)
     for epoch in range(cfg.epochs):
         model.train()  # Set the model to training mode
         total_loss = 0
