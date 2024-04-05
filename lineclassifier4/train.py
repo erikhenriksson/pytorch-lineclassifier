@@ -129,7 +129,7 @@ def run(cfg):
 
     print(data_len)
 
-    optimizer = optim.Adam(model.parameters(), lr=0.0001)
+    optimizer = optim.Adam(model.parameters(), lr=1e-5)
     for epoch in range(cfg.epochs):
         model.train()  # Set the model to training mode
         total_loss = 0
