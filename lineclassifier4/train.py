@@ -7,6 +7,8 @@ from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import DataLoader, Dataset
 
 from .model import TransformerForLineClassification
+from sklearn.metrics import f1_score, accuracy_score
+import numpy as np
 
 criterion = nn.BCELoss()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -46,15 +48,17 @@ def collate_fn(batch):
     return embeddings_padded, labels_padded
 
 
-def evaluate(model, dataloader):
+def evaluate(model, dataloader, device):
     model.eval()  # Set the model to evaluation mode
     total_loss = 0
+    all_predictions = []
+    all_labels = []
 
     with torch.no_grad():  # Inference mode, no backpropagation
         for embeddings, labels in dataloader:
             embeddings, labels = embeddings.to(device), labels.to(device)
             predictions = model(embeddings).squeeze()
-            mask = labels != -1
+
             # Ensure predictions are always 2-dimensional
             if predictions.dim() == 0:
                 predictions = predictions.unsqueeze(0).unsqueeze(
@@ -63,16 +67,32 @@ def evaluate(model, dataloader):
             elif predictions.dim() == 1:
                 predictions = predictions.unsqueeze(0)  # Adjust for a single line
 
-            valid_labels = labels[mask]  # Filters out padded labels
-            valid_predictions = predictions[
-                mask
-            ]  # Correspondingly filters predictions to match valid labels
+            mask = labels != -1
+            valid_labels = labels[mask].cpu().numpy()  # Filters out padded labels
+            valid_predictions = (
+                predictions[mask].cpu().numpy()
+            )  # Correspondingly filters predictions to match valid labels
 
-            # Now compute loss on valid_predictions and valid_labels only
-            loss = criterion(valid_predictions, valid_labels)
+            # Threshold predictions for binary classification
+            valid_predictions = (valid_predictions > 0.5).astype(np.int)
+
+            all_labels.extend(valid_labels)
+            all_predictions.extend(valid_predictions)
+
+            # Compute loss on valid_predictions and valid_labels only
+            loss = criterion(
+                torch.tensor(valid_predictions, dtype=torch.float, device=device),
+                torch.tensor(valid_labels, dtype=torch.float, device=device),
+            )
             total_loss += loss.item()
 
-    return total_loss / len(dataloader)
+    # Calculate metrics
+    f1 = f1_score(all_labels, all_predictions)
+    accuracy = accuracy_score(all_labels, all_predictions)
+
+    avg_loss = total_loss / len(dataloader)
+
+    return avg_loss, f1, accuracy
 
 
 def run(cfg):
@@ -151,8 +171,8 @@ def run(cfg):
         print(
             f"Epoch [{epoch+1}/{cfg.epochs}], Loss: {total_loss / len(train_dataloader)}"
         )
-        validation_loss = evaluate(model, dev_dataloader)
-        print(f"Validation Loss: {validation_loss}")
+        avg_loss, f1, accuracy = evaluate(model, dev_dataloader, device)
+        print(f"Validation Loss: {avg_loss}, F1 Score: {f1}, Accuracy: {accuracy}")
 
     exit()
 
