@@ -127,7 +127,7 @@ def run(cfg):
             embedding_dim=1024, nhead=8, num_encoder_layers=6, num_classes=1
         ).to(device)
         if cfg.model_type == "transformer"
-        else lstm_model
+        else lstm_model.to(device)
     )
 
     print(f"Train len: {len(train_dataloader)}")
