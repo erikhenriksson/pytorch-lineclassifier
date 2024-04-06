@@ -9,9 +9,42 @@ from sklearn.metrics import accuracy_score, f1_score
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import DataLoader, Dataset
 
-from .model import lstm_model
-
 criterion = nn.BCELoss()
+
+
+class LSTMForLineClassification(nn.Module):
+    def __init__(
+        self, embedding_dim, hidden_dim, num_layers, num_classes, bidirectional=True
+    ):
+        super(LSTMForLineClassification, self).__init__()
+        self.hidden_dim = hidden_dim
+        self.num_layers = num_layers
+        self.bidirectional = bidirectional
+
+        # LSTM layer
+        self.lstm = nn.LSTM(
+            input_size=embedding_dim,
+            hidden_size=hidden_dim,
+            num_layers=num_layers,
+            bidirectional=bidirectional,
+            batch_first=True,
+        )
+
+        # Define the output layer
+        lstm_output_dim = hidden_dim if not bidirectional else hidden_dim * 2
+        self.classifier = nn.Linear(lstm_output_dim, num_classes)
+
+    def forward(self, src):
+        # src shape: [batch_size, seq_len, embedding_dim]
+        lstm_out, _ = self.lstm(src)
+        # If using a bidirectional LSTM, lstm_out shape will be [batch_size, seq_len, hidden_dim * 2]
+
+        # Pass the output of the LSTM to the classifier
+        logits = self.classifier(lstm_out)
+        # Apply sigmoid activation to get probabilities
+        probabilities = torch.sigmoid(logits)
+
+        return probabilities
 
 
 class DocumentDataset(Dataset):
@@ -123,7 +156,16 @@ def run(cfg):
         test_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn
     )
 
-    model = lstm_model.to(device)
+    # Example model parameters
+    embedding_dim = 1024  # Dimensionality of the input embeddings
+    hidden_dim = 512  # Hidden dimension size of the LSTM
+    num_layers = 2  # Number of LSTM layers
+    num_classes = 1  # For binary classification
+    bidirectional = True  # Specify if you want to use a bidirectional LSTM
+
+    model = LSTMForLineClassification(
+        embedding_dim, hidden_dim, num_layers, num_classes, bidirectional
+    ).to(device)
 
     print(f"Train len: {len(train_dataloader)}")
     print(f"Dev len: {len(dev_dataloader)}")
@@ -133,20 +175,21 @@ def run(cfg):
     avg_loss, f1, accuracy = evaluate(model, test_dataloader, device)
     print(f"Loss: {avg_loss}, F1 Score: {f1}, Accuracy: {accuracy}")
 
-    optimizer = optim.Adam(model.parameters(), lr=5e-6, weight_decay=0.01)
+    optimizer = optim.Adam(
+        model.parameters(), lr=cfg.lstm_learning_rate, weight_decay=0.01
+    )
 
     best_val_loss = float("inf")
     patience = cfg.patience
     patience_counter = 0
 
     for epoch in range(cfg.epochs):
-        model.train()  # Set the model to training mode
+        model.train()
         total_loss = 0
 
         for embeddings, labels in train_dataloader:
             embeddings, labels = embeddings.to(device), labels.to(device)
 
-            # Forward pass: Compute predicted labels by passing embeddings to the model
             predictions = model(embeddings).squeeze()
 
             mask = labels != -1
@@ -166,10 +209,6 @@ def run(cfg):
             # Now compute loss on valid_predictions and valid_labels only
             loss = criterion(valid_predictions, valid_labels)
 
-            # Calculate loss
-            # loss = criterion(predictions, labels)
-
-            # Backward pass and optimize
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()

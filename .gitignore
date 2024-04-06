@@ -12,3 +12,6 @@ wandb
 checkpoints
 tokens_cache
 documents_*
+models/lstm_model
+models/base
+out.jsonl
