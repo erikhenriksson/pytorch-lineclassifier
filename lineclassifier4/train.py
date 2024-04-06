@@ -6,7 +6,8 @@ import torch.optim as optim
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import DataLoader, Dataset
 
-from .model import TransformerForLineClassification
+from .transformer import TransformerForLineClassification
+from .lstm import lstm_model
 from sklearn.metrics import f1_score, accuracy_score
 import numpy as np
 
@@ -121,11 +122,13 @@ def run(cfg):
     )
 
     # Assume the model is already created as 'model'
-    model = TransformerForLineClassification(
-        embedding_dim=1024, nhead=8, num_encoder_layers=6, num_classes=1
-    ).to(device)
-
-    data_len = len(train_dataloader)
+    model = (
+        TransformerForLineClassification(
+            embedding_dim=1024, nhead=8, num_encoder_layers=6, num_classes=1
+        ).to(device)
+        if cfg.model_type == "transformer"
+        else lstm_model
+    )
 
     print(f"Train len: {len(train_dataloader)}")
     print(f"Dev len: {len(dev_dataloader)}")
