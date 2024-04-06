@@ -1,12 +1,6 @@
-import sys
-
-import numpy as np
-
-from datasets import Dataset
-
 import json
 
-from datasets import Dataset, DatasetDict, concatenate_datasets
+from datasets import Dataset, DatasetDict
 
 
 def gen(languages, split):
@@ -14,7 +8,7 @@ def gen(languages, split):
         with open(f"data/{language}/{split}.json", "r", encoding="utf-8") as file:
             data = json.load(file)
         for item in data:
-            for i, line in enumerate(item["text"]):
+            for i in range(len(item["text"])):
                 yield {
                     "text": item["text"][i],
                     "labels": int(item["labels"][i]),
@@ -32,9 +26,8 @@ def get_dataset(cfg, tokenizer):
         },
     )
     splits = {}
-    splits["train"] = generate("train")
-    splits["dev"] = generate("dev")
-    splits["test"] = generate("test")
+    for split in ["train", "dev", "test"]:
+        splits[split] = generate(split)
 
     dataset = DatasetDict(splits).shuffle(seed=cfg.seed)
 

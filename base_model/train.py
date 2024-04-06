@@ -17,6 +17,8 @@ from .data import get_dataset
 
 def run(cfg):
 
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
     # Make process deterministic
     torch.manual_seed(cfg.seed)
     np.random.seed(cfg.seed)
@@ -29,7 +31,7 @@ def run(cfg):
     dataset = get_dataset(cfg, tokenizer)
     model = AutoModelForSequenceClassification.from_pretrained(
         cfg.model_name, num_labels=2
-    )
+    ).to(device)
 
     training_args = TrainingArguments(
         output_dir=f"./models/{cfg.model_name}",
@@ -82,7 +84,6 @@ def run(cfg):
     )
 
     if cfg.method == "train":
-
         # Train the model
         trainer.train()
 
