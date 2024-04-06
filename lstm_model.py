@@ -12,6 +12,9 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     # Main args
     parser.add_argument("--method", "-me", default="train")
+    parser.add_argument(
+        "--embedding_file", default="documents_embeddings_with_labels_bge-m3.pkl"
+    )
     parser.add_argument("--model_name", "-m", default="xlm-roberta-large")
     parser.add_argument("--model_type", default="lstm")
     parser.add_argument("--seed", "-s", type=int, default=42)
@@ -32,4 +35,4 @@ if __name__ == "__main__":
 
     method = cfg.method if cfg.method != "test" else "train"
 
-    locate(f"lineclassifier4.{method}").run(cfg)
+    locate(f"lstm_model.{method}").run(cfg)

@@ -1,18 +1,18 @@
 import pickle
+import random
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from sklearn.metrics import accuracy_score, f1_score
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import DataLoader, Dataset
 
-from .transformer import TransformerForLineClassification
 from .lstm import lstm_model
-from sklearn.metrics import f1_score, accuracy_score
-import numpy as np
+from .transformer import TransformerForLineClassification
 
 criterion = nn.BCELoss()
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 class DocumentDataset(Dataset):
@@ -30,7 +30,7 @@ class DocumentDataset(Dataset):
     def __getitem__(self, idx):
         document = self.documents[idx]
         # Extract embeddings and labels from the document's lines
-        embeddings, labels = zip(*document["text"])
+        embeddings, labels = zip(*document)
         # Convert the embeddings and labels into tensors
         embeddings_tensor = torch.stack(
             [torch.tensor(e, dtype=torch.float) for e in embeddings]
@@ -97,7 +97,17 @@ def evaluate(model, dataloader, device):
 
 
 def run(cfg):
-    with open("documents_embeddings_with_labels.pkl", "rb") as f:
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    # Make process deterministic
+    torch.manual_seed(cfg.seed)
+    np.random.seed(cfg.seed)
+    random.seed(cfg.seed)
+    torch.cuda.manual_seed_all(cfg.seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    with open(cfg.embedding_file, "rb") as f:
         loaded_data = pickle.load(f)
 
     # Create separate dataset instances for train, dev, and test
@@ -134,11 +144,16 @@ def run(cfg):
     print(f"Dev len: {len(dev_dataloader)}")
     print(f"Test len: {len(test_dataloader)}")
 
-    print("Testing..")
+    print("Testing pre-training...")
     avg_loss, f1, accuracy = evaluate(model, test_dataloader, device)
-    print(f"Test Loss: {avg_loss}, F1 Score: {f1}, Accuracy: {accuracy}")
+    print(f"Loss: {avg_loss}, F1 Score: {f1}, Accuracy: {accuracy}")
 
     optimizer = optim.Adam(model.parameters(), lr=5e-6, weight_decay=0.01)
+
+    best_val_loss = float("inf")
+    patience = cfg.patience
+    patience_counter = 0
+
     for epoch in range(cfg.epochs):
         model.train()  # Set the model to training mode
         total_loss = 0
@@ -180,8 +195,31 @@ def run(cfg):
         print(
             f"Epoch [{epoch+1}/{cfg.epochs}], Loss: {total_loss / len(train_dataloader)}"
         )
-        avg_loss, f1, accuracy = evaluate(model, dev_dataloader, device)
-        print(f"Validation Loss: {avg_loss}, F1 Score: {f1}, Accuracy: {accuracy}")
+        val_loss, f1, accuracy = evaluate(model, dev_dataloader, device)
+        print(f"Validation Loss: {val_loss}, F1 Score: {f1}, Accuracy: {accuracy}")
+
+        # Check if the validation loss improved
+        if val_loss < best_val_loss:
+            print(
+                f"Validation loss decreased from {best_val_loss} to {val_loss}. Saving model..."
+            )
+            best_val_loss = val_loss
+            # Reset patience counter
+            patience_counter = 0
+
+            # Save the model
+            torch.save(model.state_dict(), "models/lstm_model/best_model.pt")
+
+        else:
+            patience_counter += 1
+            print(
+                f"Validation loss did not improve. Patience: {patience_counter}/{patience}."
+            )
+
+        # Early stopping check
+        if patience_counter >= patience:
+            print("Stopping early due to no improvement in validation loss.")
+            break
 
     print("Testing..")
     avg_loss, f1, accuracy = evaluate(model, test_dataloader, device)
