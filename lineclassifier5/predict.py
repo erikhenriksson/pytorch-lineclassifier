@@ -4,6 +4,9 @@ import io
 
 from transformers import XLMRobertaForSequenceClassification, XLMRobertaTokenizer
 import torch
+from dotenv import dotenv_values
+from datasets import load_dataset
+from huggingface_hub import login
 
 
 def stream_zst_json_lines(file_path, lang):
@@ -24,13 +27,41 @@ def stream_zst_json_lines(file_path, lang):
                 yield data, doc_parsed["warc_headers"]["warc-record-id"]
 
 
-def run(cfg):
+def parse_and_clean(doc, lang):
+    data = []
+    for line, label in zip(
+        doc["content"].split("\n"),
+        doc["metadata"]["sentence_identifications"],
+    ):
+        if label and label["label"] == lang:
+            data.append(line)
 
+    return data, doc["warc_headers"]["warc-record-id"]
+
+
+def run(cfg):
+    env = dotenv_values(".env")
+    login(token=env["HF_TOKEN"])
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    dataset = load_dataset(
+        "oscar-corpus/OSCAR-2301",
+        cfg.language,
+        "train",
+        streaming=True,
+        trust_remote_code=True,
+    )
+    shuffled_dataset = dataset.shuffle(seed=42, buffer_size=10)
+    for ex in shuffled_dataset["train"]:
+        print(ex)
+        exit()
+
     tokenizer = XLMRobertaTokenizer.from_pretrained("xlm-roberta-large")
     tuned_model = XLMRobertaForSequenceClassification.from_pretrained(
         cfg.model_name
     ).to(device)
+
+    exit()
 
     # Example usage
     file_path = cfg.data

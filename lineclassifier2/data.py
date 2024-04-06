@@ -15,7 +15,11 @@ def gen(languages, split):
             data = json.load(file)
         for item in data:
             for i, line in enumerate(item["text"]):
-                yield {"text": item["text"][i], "labels": int(item["labels"][i])}
+                yield {
+                    "text": item["text"][i],
+                    "labels": int(item["labels"][i]),
+                    "language": language,
+                }
 
 
 def get_dataset(cfg, tokenizer):
