@@ -111,11 +111,9 @@ def run(cfg):
         loaded_data = pickle.load(f)
 
     # Create separate dataset instances for train, dev, and test
-    train_dataset = DocumentDataset(
-        [doc for doc in loaded_data["train"] if doc["text"]]
-    )
-    dev_dataset = DocumentDataset([doc for doc in loaded_data["dev"] if doc["text"]])
-    test_dataset = DocumentDataset([doc for doc in loaded_data["test"] if doc["text"]])
+    train_dataset = DocumentDataset([doc for doc in loaded_data["train"] if doc])
+    dev_dataset = DocumentDataset([doc for doc in loaded_data["dev"] if doc])
+    test_dataset = DocumentDataset([doc for doc in loaded_data["test"] if doc])
 
     print(train_dataset[0])
 
