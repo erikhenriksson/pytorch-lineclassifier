@@ -41,7 +41,7 @@ class LSTMForLineClassification(nn.Module):
 # Example model parameters
 embedding_dim = 1024  # Dimensionality of the input embeddings
 hidden_dim = 512  # Hidden dimension size of the LSTM
-num_layers = 4  # Number of LSTM layers
+num_layers = 2  # Number of LSTM layers
 num_classes = 1  # For binary classification
 bidirectional = True  # Specify if you want to use a bidirectional LSTM
 
