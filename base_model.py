@@ -18,6 +18,7 @@ if __name__ == "__main__":
     parser.add_argument("--train_batch_size", "-bt", type=int, default=8)
     parser.add_argument("--eval_batch_size", "-bd", type=int, default=8)
     parser.add_argument("--max_length", type=int, default=512)
+    parser.add_argument("--out_file", default="documents_embeddings_with_labels.pkl")
 
     cfg = parser.parse_args()
     print(parser.dump(cfg))

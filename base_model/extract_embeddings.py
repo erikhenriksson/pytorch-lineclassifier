@@ -78,7 +78,7 @@ def run(cfg):
             # Replace the text in the document with its embeddings
             documents[split][i] = embeddings
 
-    pickle_file = "documents_embeddings_with_labels.pkl"
+    pickle_file = cfg.out_file
 
     with open(pickle_file, "wb") as f:
         pickle.dump(documents, f)
