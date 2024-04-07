@@ -62,22 +62,12 @@ def run(cfg):
 
     print("Dataset loaded")
 
-    max_lines = 0
     batch_size = 2
     limit = 20
-    i = 0
     n = 0
     epoch = 0
     epoch_n = 0
     lstm_max_lines = 512
-    # Loop through each document to find the maximum number of lines
-    for ex in shuffled_dataset:
-        lines = ex["text"].split("\n")
-        if len(lines) > max_lines:
-            max_lines = len(lines)
-        i += 1
-        if i >= limit:
-            break
 
     dataset_iterator = iter(shuffled_dataset)
 
@@ -167,7 +157,14 @@ def run(cfg):
 
         for ex_i, ex in enumerate(batch):
             ex_len = len(ex["text"].split("\n"))
-            ex["meta"]["quality_labels"] = batch_labels[ex_i][:ex_len]
+            try:
+                ex["meta"]["quality_labels"] = batch_labels[ex_i][:ex_len]
+            except:
+                print(ex_len)
+                print(ex)
+                print(batch_labels)
+                print(batch_probs)
+                exit()
             ex["meta"]["quality_probs"] = batch_probs[ex_i][:ex_len]
             ex["meta"]["quality_lstm"] = labeled_by_lstm
             print(f"{n}: {ex_len}")
