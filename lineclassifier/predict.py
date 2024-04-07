@@ -47,6 +47,9 @@ def run(cfg):
         bidirectional=True,
     ).to(device)
 
+    model_state_dict = torch.load(cfg.lstm_model_name, map_location=device)
+    lstm_model.load_state_dict(model_state_dict)
+
     dataset = load_dataset(
         "oscar-corpus/OSCAR-2301",
         cfg.predict_language,
@@ -132,7 +135,9 @@ def run(cfg):
         if len(base_model_labels) <= lstm_max_lines:
 
             # Pad the embeddings for LSTM processing
-            padded_embeddings = pad_sequence(batch_cls_embeddings, batch_first=True)
+            padded_embeddings = pad_sequence(
+                batch_cls_embeddings, batch_first=True, padding_value=0
+            )
 
             # Process the padded embeddings through the LSTM
             lstm_outputs = lstm_model(padded_embeddings)
