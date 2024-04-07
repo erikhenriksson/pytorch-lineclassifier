@@ -153,12 +153,8 @@ def run(cfg):
         # Fix: sometimes batch_labels is int
         if isinstance(batch_labels, int):
             batch_labels = [[batch_labels]]  # Convert to list of lists for consistency
-        elif isinstance(batch_labels, list) and all(
-            isinstance(lbl, int) for lbl in batch_labels
-        ):
-            batch_labels = [
-                batch_labels
-            ]  # Wrap in another list to maintain the structure
+        if isinstance(batch_probs, int):
+            batch_probs = [[batch_probs]]  # Convert to list of lists for consistency
 
         for ex_i, ex in enumerate(batch):
             ex_len = len(ex["text"].split("\n"))
