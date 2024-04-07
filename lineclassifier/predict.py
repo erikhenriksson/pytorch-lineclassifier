@@ -156,7 +156,6 @@ def run(cfg):
             ex["meta"]["quality_labels"] = batch_labels[ex_i][:ex_len]
 
             ex["meta"]["quality_probs"] = batch_probs[ex_i][:ex_len]
-            ex["meta"]["quality_lstm"] = labeled_by_lstm
 
             n += 1
             epoch_n += 1
