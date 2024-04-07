@@ -160,6 +160,7 @@ def run(cfg):
             try:
                 ex["meta"]["quality_labels"] = batch_labels[ex_i][:ex_len]
             except:
+                print(labeled_by_lstm)
                 print(ex_len)
                 print(ex)
                 print(batch_labels)
