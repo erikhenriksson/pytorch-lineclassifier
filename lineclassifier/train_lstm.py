@@ -172,7 +172,7 @@ def run(cfg):
     avg_loss, f1, accuracy = evaluate(model, test_dataloader, device)
     print(f"Loss: {avg_loss}, F1 Score: {f1}, Accuracy: {accuracy}")
 
-    optimizer = optim.Adam(
+    optimizer = optim.AdamW(
         model.parameters(), lr=cfg.lstm_learning_rate, weight_decay=0.01
     )
 
