@@ -130,30 +130,28 @@ def run(cfg):
             )
 
             # Process the padded embeddings through the LSTM
-            batch_outputs = lstm_model(padded_embeddings)
-            batch_probs = batch_outputs.squeeze()
-
-            # Check if batch_probs is not a scalar
-            if batch_probs.dim() > 0:
-                batch_probs = batch_probs.tolist()
-            else:
-                # If it's a scalar, make it a list
-                batch_probs = [batch_probs.item()]
-
-            batch_labels = (batch_outputs.squeeze() > 0.5).long()
-
-            # Similarly adjust batch_labels
-            if batch_labels.dim() > 0:
-                batch_labels = batch_labels.tolist()
-            else:
-                # If it's a scalar, make it a list
-                batch_labels = [batch_labels.item()]
+            lstm_outputs = lstm_model(padded_embeddings)
+            batch_probs = lstm_outputs.squeeze().tolist()
+            batch_probs2 = lstm_outputs.squeeze().tolist()
+            print('"""""""')
+            print(batch_probs)
+            print(batch_probs2)
+            print('"""""""')
+            batch_labels = (lstm_outputs.squeeze() > 0.5).long().tolist()
 
             labeled_by_lstm = True
 
         else:
             batch_probs = base_batch_probs
             batch_labels = base_batch_labels
+
+        # Fix: sometimes batch_labels is int
+        if isinstance(batch_labels, int):
+            batch_labels = [[batch_labels]]  # Convert to list of lists for consistency
+        elif isinstance(batch_labels, list) and all(
+            isinstance(lbl, int) for lbl in batch_labels
+        ):
+            batch_labels = [batch_labels]
 
         if isinstance(batch_probs, float):
             batch_probs = [[batch_probs]]  # Convert to list of lists for consistency
