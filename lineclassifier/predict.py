@@ -63,11 +63,11 @@ def run(cfg):
     print("Dataset loaded")
 
     batch_size = 2
-    limit = 20
+    limit = 100000
     n = 0
     epoch = 0
     epoch_n = 0
-    lstm_max_lines = 512
+    lstm_max_lines = 100000000
 
     dataset_iterator = iter(shuffled_dataset)
 
@@ -133,9 +133,6 @@ def run(cfg):
             lstm_outputs = lstm_model(padded_embeddings)
             batch_probs = lstm_outputs.squeeze().tolist()
 
-            print('"""""""')
-            print(batch_probs)
-            print('"""""""')
             batch_labels = (lstm_outputs.squeeze() > 0.5).long().tolist()
 
             labeled_by_lstm = True
@@ -143,8 +140,6 @@ def run(cfg):
         else:
             batch_probs = base_batch_probs
             batch_labels = base_batch_labels
-
-        print(len(batch))
 
         if len(batch_labels) == batch_size and all(
             type(x) == int for x in batch_labels
@@ -157,18 +152,12 @@ def run(cfg):
 
         for ex_i, ex in enumerate(batch):
             ex_len = len(ex["text"].split("\n"))
-            print("GOING")
-            print(labeled_by_lstm)
-            print(ex_len)
-            print(ex)
-            print(batch_labels)
-            print(batch_probs)
 
             ex["meta"]["quality_labels"] = batch_labels[ex_i][:ex_len]
 
             ex["meta"]["quality_probs"] = batch_probs[ex_i][:ex_len]
             ex["meta"]["quality_lstm"] = labeled_by_lstm
-            print(f"{n}: {ex_len}")
+
             n += 1
             epoch_n += 1
             out_file = f"{cfg.predict_language}_cleaned.jsonl"
