@@ -1,48 +1,51 @@
 import json
-import zstandard as zstd
-import io
 
-from transformers import XLMRobertaForSequenceClassification, XLMRobertaTokenizer
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
 from dotenv import dotenv_values
 from datasets import load_dataset
 from huggingface_hub import login
 
+from torch.nn.utils.rnn import pad_sequence
 
-def stream_zst_json_lines(file_path, lang):
-    dctx = zstd.ZstdDecompressor()
-    with open(file_path, "rb") as compressed_file:
-        with dctx.stream_reader(compressed_file) as reader:
-            text_stream = io.TextIOWrapper(reader, encoding="utf-8")
-            for doc in text_stream:
-                doc_parsed = json.loads(doc)
-                data = []
-                for line, label in zip(
-                    doc_parsed["content"].split("\n"),
-                    doc_parsed["metadata"]["sentence_identifications"],
-                ):
-                    if label and label["label"] == lang:
-                        data.append(line)
-
-                yield data, doc_parsed["warc_headers"]["warc-record-id"]
+from .train_lstm import LSTMForLineClassification
 
 
 def parse_and_clean(doc, lang):
     data = []
     for line, label in zip(
-        doc["content"].split("\n"),
-        doc["metadata"]["sentence_identifications"],
+        doc["text"].split("\n"),
+        doc["meta"]["sentence_identifications"],
     ):
         if label and label["label"] == lang:
             data.append(line)
 
-    return data, doc["warc_headers"]["warc-record-id"]
+    return data, doc["meta"]["warc_headers"]["warc-record-id"]
 
 
 def run(cfg):
     env = dotenv_values(".env")
     login(token=env["HF_TOKEN"])
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    # Load model and tokenizer
+    base_model = AutoModelForSequenceClassification.from_pretrained(
+        cfg.trained_model_name
+    ).to(device)
+
+    # Get the original model's name
+    with open(f"{cfg.trained_model_name}/config.json", "r") as config_file:
+        config = json.load(config_file)
+    tokenizer = AutoTokenizer.from_pretrained(config.get("_name_or_path", None))
+
+    # Get trained lstm model
+    lstm_model = LSTMForLineClassification(
+        embedding_dim=1024,
+        hidden_dim=512,
+        num_layers=2,
+        num_classes=1,
+        bidirectional=True,
+    ).to(device)
 
     dataset = load_dataset(
         "oscar-corpus/OSCAR-2301",
@@ -51,55 +54,111 @@ def run(cfg):
         streaming=True,
         trust_remote_code=True,
     )
-    shuffled_dataset = dataset.shuffle(seed=42, buffer_size=10)
-    for ex in shuffled_dataset["train"]:
-        print(ex)
-        exit()
 
-    tokenizer = XLMRobertaTokenizer.from_pretrained("xlm-roberta-large")
-    tuned_model = XLMRobertaForSequenceClassification.from_pretrained(
-        cfg.model_name
-    ).to(device)
+    shuffled_dataset = dataset.shuffle(seed=42, buffer_size=1000)["train"]
 
-    exit()
+    print("Dataset loaded")
 
-    # Example usage
-    file_path = cfg.data
+    max_lines = 0
+    batch_size = 2
+    limit = 20
     i = 0
-
-    for json_object in stream_zst_json_lines(file_path, cfg.language):
-
-        lines, rec_id = json_object
-        non_junk_lines = []
-
-        for line in lines:
-            inputs = tokenizer(
-                line,
-                return_tensors="pt",
-                max_length=512,
-                truncation=True,
-                padding=True,
-            )
-            inputs = {key: value.to(device) for key, value in inputs.items()}
-            with torch.no_grad():
-                outputs = tuned_model(**inputs)
-
-                predictions = torch.argmax(outputs.logits, dim=-1)
-
-                is_not_junk = (
-                    predictions.item() == 1
-                )  # Adjust label index according to your model
-
-                if is_not_junk:
-                    non_junk_lines.append(line)
-
-        result_text = " ".join(non_junk_lines)
-        out_file = cfg.data.split("/")[-1].split(".zst")[0]
-        if result_text:
-            with open(f"cleaned/{out_file}", "a", encoding="utf-8") as file:
-                file.write(
-                    json.dumps({"id": rec_id, "text": result_text}, ensure_ascii=False)
-                    + "\n"
-                )
-
+    n = 0
+    epoch = 0
+    epoch_n = 0
+    lstm_max_lines = 512
+    # Loop through each document to find the maximum number of lines
+    for ex in shuffled_dataset:
+        lines = ex["text"].split("\n")
+        if len(lines) > max_lines:
+            max_lines = len(lines)
         i += 1
+        if i >= limit:
+            break
+
+    dataset_iterator = iter(shuffled_dataset)
+
+    # Process in batches
+    for i in range(0, limit, batch_size):
+        batch = []
+
+        for _ in range(batch_size):
+            try:
+                example = next(dataset_iterator)
+                batch.append(example)
+            except StopIteration:
+                # End of the dataset reached
+                break
+
+        batch_cls_embeddings = []
+        batch_labels = []
+        batch_probs = []
+
+        # Collect lines from all documents in the batch for parallel processing
+        all_lines = [line for ex in batch for line in ex["text"].split("\n")]
+        all_inputs = tokenizer(
+            all_lines,
+            return_tensors="pt",
+            padding=True,
+            truncation=True,
+            max_length=512,
+            add_special_tokens=True,
+        )
+
+        all_inputs = {k: v.to(device) for k, v in all_inputs.items()}
+
+        with torch.no_grad():
+            batch_outputs = base_model(**all_inputs, output_hidden_states=True)
+            cls_embeddings = batch_outputs.hidden_states[-1][:, 0, :]
+
+            base_model_preds = torch.sigmoid(batch_outputs.logits)
+            base_model_probs = base_model_preds[:, 1].tolist()
+            base_model_labels = (base_model_preds > 0.5).long()[:, 1].tolist()
+
+        # Now, split the cls_embeddings back into per-document batches
+        current_idx = 0
+        for ex in batch:
+            num_lines = len(ex["text"].split("\n"))
+            ex_embeddings = cls_embeddings[current_idx : current_idx + num_lines]
+            ex_probs = base_model_probs[current_idx : current_idx + num_lines]
+            ex_labels = base_model_labels[current_idx : current_idx + num_lines]
+            batch_cls_embeddings.append(ex_embeddings)
+            batch_probs.append(ex_probs)
+            batch_labels.append(ex_labels)
+            current_idx += num_lines
+
+        labeled_by_lstm = False
+
+        if len(base_model_labels) <= lstm_max_lines:
+
+            # Pad the embeddings for LSTM processing
+            padded_embeddings = pad_sequence(batch_cls_embeddings, batch_first=True)
+
+            # Process the padded embeddings through the LSTM
+            lstm_outputs = lstm_model(padded_embeddings)
+            batch_probs = lstm_outputs.squeeze().tolist()
+            batch_labels = (lstm_outputs.squeeze() > 0.5).long().tolist()
+
+            labeled_by_lstm = True
+
+        for ex_i, ex in enumerate(batch):
+            ex_len = len(ex["text"].split("\n"))
+            ex["meta"]["quality_labels"] = batch_labels[ex_i][:ex_len]
+            ex["meta"]["quality_probs"] = batch_probs[ex_i][:ex_len]
+            ex["meta"]["quality_lstm"] = labeled_by_lstm
+            print(f"{n}: {ex_len}")
+            n += 1
+            epoch_n += 1
+            out_file = f"{cfg.predict_language}_cleaned.jsonl"
+
+            with open(f"cleaned/{out_file}", "a", encoding="utf-8") as file:
+                file.write(json.dumps(ex, ensure_ascii=False) + "\n")
+
+            if n >= limit:
+                exit()
+
+        if epoch_n >= 1000:
+            epoch += 1
+            shuffled_dataset.set_epoch(epoch)
+            dataset_iterator = iter(shuffled_dataset)
+            epoch_n = 0

@@ -134,7 +134,7 @@ def run(cfg):
     torch.cuda.manual_seed_all(cfg.seed)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
-    with open(cfg.embedding_file, "rb") as f:
+    with open(cfg.embeddings_file, "rb") as f:
         loaded_data = pickle.load(f)
 
     # Create separate dataset instances for train, dev, and test
@@ -156,15 +156,12 @@ def run(cfg):
         test_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn
     )
 
-    # Example model parameters
-    embedding_dim = 1024  # Dimensionality of the input embeddings
-    hidden_dim = 512  # Hidden dimension size of the LSTM
-    num_layers = 2  # Number of LSTM layers
-    num_classes = 1  # For binary classification
-    bidirectional = True  # Specify if you want to use a bidirectional LSTM
-
     model = LSTMForLineClassification(
-        embedding_dim, hidden_dim, num_layers, num_classes, bidirectional
+        embedding_dim=1024,
+        hidden_dim=512,
+        num_layers=2,
+        num_classes=1,
+        bidirectional=True,
     ).to(device)
 
     print(f"Train len: {len(train_dataloader)}")
