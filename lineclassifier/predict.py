@@ -91,8 +91,8 @@ def run(cfg):
                 break
 
         batch_cls_embeddings = []
-        batch_labels = []
-        batch_probs = []
+        base_batch_labels = []
+        base_batch_probs = []
 
         # Collect lines from all documents in the batch for parallel processing
         all_lines = [line for ex in batch for line in ex["text"].split("\n")]
@@ -123,8 +123,8 @@ def run(cfg):
             ex_probs = base_model_probs[current_idx : current_idx + num_lines]
             ex_labels = base_model_labels[current_idx : current_idx + num_lines]
             batch_cls_embeddings.append(ex_embeddings)
-            batch_probs.append(ex_probs)
-            batch_labels.append(ex_labels)
+            base_batch_probs.append(ex_probs)
+            base_batch_labels.append(ex_labels)
             current_idx += num_lines
 
         labeled_by_lstm = False
@@ -140,6 +140,10 @@ def run(cfg):
             batch_labels = (lstm_outputs.squeeze() > 0.5).long().tolist()
 
             labeled_by_lstm = True
+
+        else:
+            batch_probs = base_batch_probs
+            batch_labels = base_batch_labels
 
         for ex_i, ex in enumerate(batch):
             ex_len = len(ex["text"].split("\n"))
