@@ -131,7 +131,7 @@ def run(cfg):
 
             # Process the padded embeddings through the LSTM
             lstm_outputs = lstm_model(padded_embeddings)
-            batch_probs = lstm_outputs.squeeze().tolist()
+            batch_probs = lstm_outputs.squeeze().tolist()[0]
             batch_probs2 = lstm_outputs.tolist()
             print('"""""""')
             print(batch_probs)
