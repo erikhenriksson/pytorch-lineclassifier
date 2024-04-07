@@ -148,13 +148,14 @@ def run(cfg):
             batch_probs = [[batch_probs]]  # Convert to list of lists for consistency
 
         for ex_i, ex in enumerate(batch):
+            ex_len = len(ex["text"].split("\n"))
             print("GOING")
             print(labeled_by_lstm)
             print(ex_len)
             print(ex)
             print(batch_labels)
             print(batch_probs)
-            ex_len = len(ex["text"].split("\n"))
+
             ex["meta"]["quality_labels"] = batch_labels[ex_i][:ex_len]
 
             ex["meta"]["quality_probs"] = batch_probs[ex_i][:ex_len]
