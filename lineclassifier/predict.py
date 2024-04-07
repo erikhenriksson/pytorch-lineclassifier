@@ -69,7 +69,7 @@ def run(cfg):
     n = 0
     epoch = 0
     epoch_n = 0
-    lstm_max_lines = 10000
+    lstm_max_lines = 512
     # Loop through each document to find the maximum number of lines
     for ex in shuffled_dataset:
         lines = ex["text"].split("\n")
@@ -82,7 +82,7 @@ def run(cfg):
     dataset_iterator = iter(shuffled_dataset)
 
     # Process in batches
-    for i in range(0, limit, batch_size):
+    while True:
         batch = []
 
         for _ in range(batch_size):
