@@ -131,11 +131,10 @@ def run(cfg):
 
             # Process the padded embeddings through the LSTM
             lstm_outputs = lstm_model(padded_embeddings)
-            batch_probs = lstm_outputs.squeeze().tolist()[0]
-            batch_probs2 = lstm_outputs.tolist()
+            batch_probs = lstm_outputs.squeeze().tolist()
+
             print('"""""""')
             print(batch_probs)
-            print(batch_probs2)
             print('"""""""')
             batch_labels = (lstm_outputs.squeeze() > 0.5).long().tolist()
 
@@ -145,20 +144,7 @@ def run(cfg):
             batch_probs = base_batch_probs
             batch_labels = base_batch_labels
 
-        # Fix: sometimes batch_labels is int
-        if isinstance(batch_labels, int):
-            batch_labels = [[batch_labels]]  # Convert to list of lists for consistency
-        elif isinstance(batch_labels, list) and all(
-            isinstance(lbl, int) for lbl in batch_labels
-        ):
-            batch_labels = [batch_labels]
-
-        if isinstance(batch_probs, float):
-            batch_probs = [[batch_probs]]  # Convert to list of lists for consistency
-        elif isinstance(batch_probs, list) and all(
-            isinstance(lbl, float) for lbl in batch_probs
-        ):
-            batch_probs = [batch_probs]
+        print(len(batch))
 
         for ex_i, ex in enumerate(batch):
             ex_len = len(ex["text"].split("\n"))
