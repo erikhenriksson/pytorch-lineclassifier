@@ -230,7 +230,7 @@ def run(cfg):
 
             # Save the model
             model.train()
-            torch.save(model.state_dict(), "models/lstm_model/best_model.pt")
+            torch.save(model.state_dict(), cfg.lstm_model_name)
 
         else:
             patience_counter += 1

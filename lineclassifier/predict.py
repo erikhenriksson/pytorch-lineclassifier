@@ -150,6 +150,16 @@ def run(cfg):
             batch_probs = base_batch_probs
             batch_labels = base_batch_labels
 
+        # Fix: sometimes batch_labels is int
+        if isinstance(batch_labels, int):
+            batch_labels = [[batch_labels]]  # Convert to list of lists for consistency
+        elif isinstance(batch_labels, list) and all(
+            isinstance(lbl, int) for lbl in batch_labels
+        ):
+            batch_labels = [
+                batch_labels
+            ]  # Wrap in another list to maintain the structure
+
         for ex_i, ex in enumerate(batch):
             ex_len = len(ex["text"].split("\n"))
             ex["meta"]["quality_labels"] = batch_labels[ex_i][:ex_len]
