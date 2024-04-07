@@ -146,6 +146,11 @@ def run(cfg):
 
         print(len(batch))
 
+        if len(batch_labels) == 2 and all(type(x) == int for x in batch_labels):
+            batch_labels = [[item] for item in batch_labels]
+        if len(batch_probs) == 2 and all(type(x) == int for x in batch_probs):
+            batch_probs = [[item] for item in batch_probs]
+
         for ex_i, ex in enumerate(batch):
             ex_len = len(ex["text"].split("\n"))
             print("GOING")
