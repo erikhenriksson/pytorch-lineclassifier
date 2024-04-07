@@ -67,7 +67,7 @@ def run(cfg):
     n = 0
     epoch = 0
     epoch_n = 0
-    lstm_max_lines = 512
+    lstm_max_lines = 10000000
 
     dataset_iterator = iter(shuffled_dataset)
 
@@ -155,9 +155,9 @@ def run(cfg):
         for ex_i, ex in enumerate(batch):
             ex_len = len(ex["text"].split("\n"))
 
-            ex["meta"]["quality_labels"] = batch_labels[ex_i][:ex_len][0]
+            ex["meta"]["quality_labels"] = batch_labels[ex_i][:ex_len]
 
-            ex["meta"]["quality_probs"] = batch_probs[ex_i][:ex_len][0]
+            ex["meta"]["quality_probs"] = batch_probs[ex_i][:ex_len]
             ex["meta"]["quality_lstm"] = labeled_by_lstm
             print(f"{n}: {ex_len}")
             print(ex)
