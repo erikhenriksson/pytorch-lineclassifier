@@ -154,18 +154,13 @@ def run(cfg):
 
         for ex_i, ex in enumerate(batch):
             ex_len = len(ex["text"].split("\n"))
-            print("GOING")
-            print(labeled_by_lstm)
-            print(ex_len)
-            print(ex)
-            print(batch_labels)
-            print(batch_probs)
 
-            ex["meta"]["quality_labels"] = batch_labels[ex_i][:ex_len]
+            ex["meta"]["quality_labels"] = batch_labels[ex_i][:ex_len][0]
 
-            ex["meta"]["quality_probs"] = batch_probs[ex_i][:ex_len]
+            ex["meta"]["quality_probs"] = batch_probs[ex_i][:ex_len][0]
             ex["meta"]["quality_lstm"] = labeled_by_lstm
             print(f"{n}: {ex_len}")
+            print(ex)
             n += 1
             epoch_n += 1
             out_file = f"{cfg.predict_language}_cleaned.jsonl"
