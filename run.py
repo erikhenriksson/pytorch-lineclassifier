@@ -13,7 +13,7 @@ if __name__ == "__main__":
     parser.add_argument("--method", "-m", default="train")
     parser.add_argument("--base_model_name", default="BAAI/bge-m3")
     parser.add_argument("--trained_model_name", default="models/base")
-    parser.add_argument("--lstm_model_name", default="models/lstm/best_model.pt")
+    parser.add_argument("--lstm_model_name", default="models/lstm_model/best_model.pt")
     parser.add_argument("--seed", "-s", type=int, default=42)
     parser.add_argument("--languages", default="de-en-es-fi-fr-se")
     parser.add_argument("--predict_language", default="sv")
