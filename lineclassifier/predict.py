@@ -130,24 +130,14 @@ def run(cfg):
             )
 
             # Process the padded embeddings through the LSTM
-            batch_outputs = lstm_model(padded_embeddings)
-            batch_probs = batch_outputs.squeeze()
+            lstm_outputs = lstm_model(padded_embeddings)
+            # Ensure lstm_outputs has a minimum of 2 dimensions [batch_size, num_classes]
+            batch_probs = lstm_outputs.view(-1, lstm_outputs.size(-1)).tolist()
 
-            # Check if batch_probs is not a scalar
-            if batch_probs.dim() > 0:
-                batch_probs = batch_probs.tolist()
-            else:
-                # If it's a scalar, make it a list
-                batch_probs = [batch_probs.item()]
-
-            batch_labels = (batch_outputs.squeeze() > 0.5).long()
-
-            # Similarly adjust batch_labels
-            if batch_labels.dim() > 0:
-                batch_labels = batch_labels.tolist()
-            else:
-                # If it's a scalar, make it a list
-                batch_labels = [batch_labels.item()]
+            # Applying threshold and converting to long
+            batch_labels = (
+                (lstm_outputs.view(-1, lstm_outputs.size(-1)) > 0.5).long().tolist()
+            )
 
             labeled_by_lstm = True
 
