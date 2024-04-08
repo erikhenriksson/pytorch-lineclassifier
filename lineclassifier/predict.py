@@ -63,6 +63,7 @@ def run(cfg):
     print("Dataset loaded")
 
     batch_size = 2
+    max_lines_per_batch = 8
     limit = 100000
     n = 0
     epoch = 0
@@ -87,6 +88,47 @@ def run(cfg):
         base_batch_labels = []
         base_batch_probs = []
 
+        base_model_labels = []
+        base_model_probs = []
+        base_model_cls_embeddings = []
+
+        all_lines = [line for ex in batch for line in ex["text"].split("\n")]
+
+        for start_idx in range(0, len(all_lines), max_lines_per_batch):
+            end_idx = min(start_idx + max_lines_per_batch, num_lines)
+            lines_sub_batch = all_lines[start_idx:end_idx]
+
+            # Tokenize the current sub-batch of lines
+            sub_batch_inputs = tokenizer(
+                lines_sub_batch,
+                return_tensors="pt",
+                padding=True,
+                truncation=True,
+                max_length=512,
+                add_special_tokens=True,
+            ).to(device)
+
+            # Forward pass for the current sub-batch
+            with torch.no_grad():
+                sub_batch_outputs = base_model(
+                    **sub_batch_inputs, output_hidden_states=True
+                )
+                cls_embeddings = sub_batch_outputs.hidden_states[-1][:, 0, :]
+                sub_batch_preds = torch.sigmoid(sub_batch_outputs.logits)
+
+                sub_batch_probs = sub_batch_preds[:, 1].tolist()
+                sub_batch_labels = (sub_batch_preds > 0.5).long()[:, 1].tolist()
+
+            # Aggregate the results
+            base_model_cls_embeddings.append(cls_embeddings)
+            base_model_probs.extend(sub_batch_probs)
+            base_model_labels.extend(sub_batch_labels)
+
+        # Concatenate all cls_embeddings from sub-batches
+        cls_embeddings = torch.cat(cls_embeddings, dim=0)
+
+        """
+
         # Collect lines from all documents in the batch for parallel processing
         all_lines = [line for ex in batch for line in ex["text"].split("\n")]
         all_inputs = tokenizer(
@@ -107,6 +149,8 @@ def run(cfg):
             base_model_preds = torch.sigmoid(batch_outputs.logits)
             base_model_probs = base_model_preds[:, 1].tolist()
             base_model_labels = (base_model_preds > 0.5).long()[:, 1].tolist()
+        
+        """
 
         # Now, split the cls_embeddings back into per-document batches
         current_idx = 0
@@ -134,8 +178,6 @@ def run(cfg):
             batch_probs = lstm_outputs.squeeze().tolist()
 
             batch_labels = (lstm_outputs.squeeze() > 0.5).long().tolist()
-
-            labeled_by_lstm = True
 
         else:
             batch_probs = base_batch_probs
