@@ -108,6 +108,8 @@ def run(cfg):
                 add_special_tokens=True,
             ).to(device)
 
+            sub_batch_inputs = {k: v.to(device) for k, v in sub_batch_inputs.items()}
+
             # Forward pass for the current sub-batch
             with torch.no_grad():
                 sub_batch_outputs = base_model(
