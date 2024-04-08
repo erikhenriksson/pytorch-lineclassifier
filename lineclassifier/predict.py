@@ -95,7 +95,7 @@ def run(cfg):
         all_lines = [line for ex in batch for line in ex["text"].split("\n")]
 
         for start_idx in range(0, len(all_lines), max_lines_per_batch):
-            end_idx = min(start_idx + max_lines_per_batch, num_lines)
+            end_idx = min(start_idx + max_lines_per_batch, len(all_lines))
             lines_sub_batch = all_lines[start_idx:end_idx]
 
             # Tokenize the current sub-batch of lines
