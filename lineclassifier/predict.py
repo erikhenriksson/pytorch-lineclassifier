@@ -120,7 +120,7 @@ def run(cfg):
                 sub_batch_labels = (sub_batch_preds > 0.5).long()[:, 1].tolist()
 
             # Aggregate the results
-            base_model_cls_embeddings.append(cls_embeddings)
+            cls_embeddings.append(cls_embeddings)
             base_model_probs.extend(sub_batch_probs)
             base_model_labels.extend(sub_batch_labels)
 
